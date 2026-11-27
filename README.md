@@ -1,56 +1,41 @@
-# Welcome to your Expo app 👋
+# Luma Calendar
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng lịch và quản lý công việc cá nhân, đa nền tảng (web, Android, iOS), có **lịch âm Việt Nam chính xác** (UTC+7).
 
-## Get started
+> Trạng thái: **M1 – Calendar Core** (bản web, lưu dữ liệu trên trình duyệt). Xem [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
 
-1. Install dependencies
+## Chạy thử (web)
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Yêu cầu: Node.js 20+.
 
 ```bash
-npm run reset-project
+npm install
+npm run web          # mở http://localhost:8081
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Lệnh thường dùng
 
-### Other setup steps
+| Lệnh | Việc |
+|---|---|
+| `npm run web` | Chạy bản web (dev) |
+| `npm test` | Chạy toàn bộ unit test (Vitest) |
+| `npm run typecheck` | Kiểm tra kiểu TypeScript |
+| `npm run lint` | ESLint |
+| `npm run build:web` | Build web tĩnh vào `dist/` |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Tài liệu
 
-## Learn more
+- [Đặc tả sản phẩm](docs/PRODUCT_SPEC.md)
+- [Kiến trúc](docs/ARCHITECTURE.md)
+- [Mô hình dữ liệu](docs/DATA_MODEL.md)
+- [Design system](docs/DESIGN_SYSTEM.md)
+- [Lộ trình](docs/ROADMAP.md)
+- [Quyết định kỹ thuật](docs/DECISIONS.md)
+- [Kế hoạch kiểm thử](docs/TEST_PLAN.md)
+- [Tình trạng dự án](docs/PROJECT_STATUS.md)
+- [CHANGELOG](CHANGELOG.md)
 
-To learn more about developing your project with Expo, look at the following resources:
+## Dữ liệu & quyền riêng tư
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Ở M1, dữ liệu chỉ nằm trong IndexedDB của trình duyệt bạn đang dùng. Không có server, không telemetry.
+Hãy dùng **Cài đặt → Xuất dữ liệu (JSON)** để sao lưu cho tới khi có đồng bộ (M3).
