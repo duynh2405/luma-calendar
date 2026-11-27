@@ -43,6 +43,8 @@ interface EventBase extends BaseRecord {
   recurrenceDay?: DayKey | null;
   /** Time block: the task this event schedules. */
   taskId?: ID | null;
+  /** Reminder offsets in minutes before start (delivered from M4). */
+  reminders?: number[];
 }
 
 /** Timed event: start/end are UTC instants (ISO); timeZone is the zone it was created in. */
@@ -99,12 +101,14 @@ export interface Task extends BaseRecord {
   /** Repeat: completing the task moves dueDay to the next occurrence. */
   recurrence: Recurrence | null;
   /** History of completions (recurring and one-off). */
-  completions: Array<{ at: string; dueDay: DayKey | null }>;
+  completions: { at: string; dueDay: DayKey | null }[];
   completedAt: string | null;
   sortOrder: number;
   /** Preparation / post-production task of an event. */
   linkedEventId: ID | null;
   linkRole: 'prep' | 'post' | null;
+  /** Reminder offsets in minutes before the due time (delivered from M4). */
+  reminders?: number[];
 }
 
 export type WeekStart = 0 | 1 | 6;

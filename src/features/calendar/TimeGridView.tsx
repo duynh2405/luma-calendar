@@ -9,16 +9,15 @@ import { Platform, Pressable, type PointerEvent as RNPointerEvent, ScrollView, S
 import { dayInfo } from '@/core/lunar/dayinfo';
 import { layoutDay, layoutSpanRowVisible, timedSegments } from '@/core/layout/layout';
 import { shiftEvent } from '@/core/model/draft';
-import type { CalendarEvent } from '@/core/model/types';
 import { type DayKey, isWeekend } from '@/core/time/days';
 import { formatMinutes, instantToWall, nowWall, wallToInstant } from '@/core/time/zone';
-import { eventColor, useData } from '@/data/store';
+import { eventColor } from '@/data/store';
 import { lunarCellLabel, useLocale, useT, weekdayShort } from '@/i18n';
 import { Txt } from '@/ui/primitives';
 import { radius, useTheme, withAlpha } from '@/ui/theme';
 
-import { safely } from './actions';
-import { clamp, EventBar, newDraft, openCreate, snap, SNAP_MIN, useCalendarData, webProps } from './shared';
+import { changeInstanceTime, type DisplayEvent, openInstance } from './actions';
+import { clamp, EventBar, keyOf, newDraft, openCreate, snap, SNAP_MIN, useCalendarData, useDisplayEvents, webProps } from './shared';
 import { pointFrom, type Pt, rectOf, usePointerDrag } from './use-pointer-drag';
 import { useUi } from './ui-store';
 
@@ -28,12 +27,12 @@ const BAR_H = 22;
 
 type Preview =
   | { kind: 'create'; day: DayKey; startMin: number; endMin: number }
-  | { kind: 'move'; event: CalendarEvent; deltaMin: number }
-  | { kind: 'resize'; event: CalendarEvent; end: string }
-  | { kind: 'band'; event: CalendarEvent; deltaDays: number };
+  | { kind: 'move'; event: DisplayEvent; deltaMin: number }
+  | { kind: 'resize'; event: DisplayEvent; end: string }
+  | { kind: 'band'; event: DisplayEvent; deltaDays: number };
 
 interface EventDragData {
-  event: CalendarEvent;
+  event: DisplayEvent;
   mode: 'move' | 'resize';
   col: number;
   min: number;
@@ -43,9 +42,10 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
   const t = useTheme();
   const T = useT();
   const locale = useLocale();
-  const { calendars, events, settings, tz } = useCalendarData();
+  const { calendars, settings, tz } = useCalendarData();
+  const events = useDisplayEvents(days[0], days[days.length - 1]);
   const editor = useUi((s) => s.editor);
-  const openEditor = useUi((s) => s.openEditor);
+  const taskPanel = useUi((s) => s.taskPanel);
   const [preview, setPreview] = useState<Preview | null>(null);
   // Re-render every 30 s so the "now" line moves.
   const [tick, setTick] = useState(0);
@@ -68,17 +68,17 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const draggedId = preview && preview.kind !== 'create' ? preview.event.id : null;
+  const draggedId = preview && preview.kind !== 'create' ? keyOf(preview.event) : null;
 
   // Events as displayed, with the preview applied.
   const displayEvents = useMemo(() => {
     if (!preview || preview.kind === 'create') return events;
     const e = preview.event;
-    let ghost: CalendarEvent;
+    let ghost: DisplayEvent;
     if (preview.kind === 'move') ghost = { ...e, ...shiftEvent(e, tz, preview.deltaMin) };
     else if (preview.kind === 'band') ghost = { ...e, ...shiftEvent(e, tz, preview.deltaDays * 1440) };
-    else ghost = { ...e, end: preview.end } as CalendarEvent;
-    return events.map((x) => (x.id === e.id ? ghost : x));
+    else ghost = { ...e, end: preview.end };
+    return events.map((x) => (keyOf(x) === keyOf(e) ? ghost : x));
   }, [events, preview, tz]);
 
   const segments = useMemo(() => timedSegments(displayEvents, days, tz), [displayEvents, days, tz]);
@@ -147,45 +147,45 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
     onEnd(pt, _s, d, moved) {
       setPreview(null);
       if (!moved) {
-        openEditor({ mode: 'edit', id: d.event.id });
+        openInstance(d.event);
         return;
       }
       const g = gridPoint(pt);
       if (d.mode === 'move') {
         const delta = (g.col - d.col) * 1440 + snap(g.min - d.min);
         if (delta !== 0) {
-          safely(() => useData.getState().updateEvent(d.event.id, shiftEvent(d.event, tz, delta), 'event-moved'), 'event-moved');
+          changeInstanceTime(d.event, shiftEvent(d.event, tz, delta), 'event-moved');
         }
       } else {
         const end = resizedEnd(d.event, days[g.col], snap(g.min));
         if (end !== d.event.end) {
-          safely(() => useData.getState().updateEvent(d.event.id, { end }, 'event-resized'), 'event-resized');
+          changeInstanceTime(d.event, { start: d.event.start, end }, 'event-resized');
         }
       }
     },
     onCancel: () => setPreview(null),
   });
 
-  function resizedEnd(e: CalendarEvent, day: DayKey, min: number): string {
+  function resizedEnd(e: DisplayEvent, day: DayKey, min: number): string {
     const end = wallToInstant(day, min, tz);
     const minEnd = Date.parse(e.start) + SNAP_MIN * 60000;
     return Date.parse(end) < minEnd ? new Date(minEnd).toISOString() : end;
   }
 
   // --- all-day band ---
-  const beginBandDrag = usePointerDrag<{ event: CalendarEvent; col: number }>({
+  const beginBandDrag = usePointerDrag<{ event: DisplayEvent; col: number }>({
     onMove(pt, _s, d) {
       setPreview({ kind: 'band', event: d.event, deltaDays: bandCol(pt) - d.col });
     },
     onEnd(pt, _s, d, moved) {
       setPreview(null);
       if (!moved) {
-        openEditor({ mode: 'edit', id: d.event.id });
+        openInstance(d.event);
         return;
       }
       const delta = bandCol(pt) - d.col;
       if (delta) {
-        safely(() => useData.getState().updateEvent(d.event.id, shiftEvent(d.event, tz, delta * 1440), 'event-moved'), 'event-moved');
+        changeInstanceTime(d.event, shiftEvent(d.event, tz, delta * 1440), 'event-moved');
       }
     },
     onCancel: () => setPreview(null),
@@ -196,7 +196,8 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
     },
   });
 
-  const selectedId = editor?.mode === 'edit' ? editor.id : null;
+  const selectedId =
+    editor?.mode === 'edit' ? (editor.instance?.instanceKey ?? editor.id) : taskPanel ? `task:${taskPanel.id}` : null;
   const isWeb = Platform.OS === 'web';
 
   return (
@@ -261,7 +262,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
           ))}
           {bars.map((b) => (
             <View
-              key={b.event.id}
+              key={keyOf(b.event)}
               style={{
                 position: 'absolute',
                 top: 3 + b.lane * BAR_H,
@@ -274,10 +275,10 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                 event={b.event}
                 continuesBefore={b.continuesBefore}
                 continuesAfter={b.continuesAfter}
-                selected={selectedId === b.event.id}
-                ghost={draggedId === b.event.id}
-                onPointerDown={isWeb ? (e) => beginBandDrag(e, { event: b.event, col: bandCol(pointFrom(e)) }) : undefined}
-                onPress={isWeb ? undefined : () => openEditor({ mode: 'edit', id: b.event.id })}
+                selected={selectedId === keyOf(b.event)}
+                ghost={draggedId === keyOf(b.event)}
+                onPointerDown={isWeb ? (e) => beginBandDrag(e, { event: b.event as DisplayEvent, col: bandCol(pointFrom(e)) }) : undefined}
+                onPress={isWeb ? undefined : () => openInstance(b.event as DisplayEvent)}
               />
             </View>
           ))}
@@ -332,14 +333,14 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                   const color = eventColor(s.event, calendars);
                   const top = (s.startMin / 60) * HOUR_H;
                   const height = Math.max(((s.endMin - s.startMin) / 60) * HOUR_H - 1, 18);
-                  const selected = selectedId === s.event.id;
-                  const ghost = draggedId === s.event.id;
+                  const selected = selectedId === keyOf(s.event);
+                  const ghost = draggedId === keyOf(s.event);
                   const start = instantToWall(s.event.start, tz);
                   const end = instantToWall(s.event.end, tz);
                   const timeText = `${formatMinutes(start.minutes, settings.timeFormat)} – ${formatMinutes(end.minutes, settings.timeFormat)}`;
                   return (
                     <View
-                      key={`${s.event.id}:${d}`}
+                      key={`${keyOf(s.event)}:${d}`}
                       style={{
                         position: 'absolute',
                         top,
@@ -359,11 +360,11 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                           isWeb
                             ? ((e: RNPointerEvent) => {
                                 const g = gridPointFromEvent(e, col);
-                                beginEventDrag(e, { event: s.event, mode: 'move', col: g.col, min: g.min });
+                                beginEventDrag(e, { event: s.event as DisplayEvent, mode: 'move', col: g.col, min: g.min });
                               })
                             : undefined
                         }
-                        onPress={isWeb ? undefined : () => openEditor({ mode: 'edit', id: s.event.id })}
+                        onPress={isWeb ? undefined : () => openInstance(s.event as DisplayEvent)}
                         style={[
                           styles.block,
                           {
@@ -403,7 +404,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                             onPointerDown={
                               ((e: RNPointerEvent) => {
                                 const g = gridPointFromEvent(e, col);
-                                beginEventDrag(e, { event: s.event, mode: 'resize', col: g.col, min: g.min });
+                                beginEventDrag(e, { event: s.event as DisplayEvent, mode: 'resize', col: g.col, min: g.min });
                               }) as never
                             }
                           />

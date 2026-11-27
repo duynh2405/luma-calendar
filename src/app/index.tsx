@@ -1,5 +1,5 @@
-import { CalendarScreen } from '@/features/calendar/CalendarScreen';
+import { TodayScreen } from '@/features/today/TodayScreen';
 
 export default function Index() {
-  return <CalendarScreen />;
+  return <TodayScreen />;
 }

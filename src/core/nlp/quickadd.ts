@@ -33,14 +33,14 @@ export interface QuickAddResult {
   calendarId: string | null;
   priority: Priority;
   /** Human-readable notes about guesses the parser made (Vietnamese keys). */
-  ambiguous: Array<'hour-pm-guess' | 'weekday-today' | 'date-rolled-forward'>;
-  spans: Array<{ start: number; end: number; type: SpanType }>;
+  ambiguous: ('hour-pm-guess' | 'weekday-today' | 'date-rolled-forward')[];
+  spans: { start: number; end: number; type: SpanType }[];
 }
 
 export interface QuickAddOptions {
   today: DayKey;
   defaultDurationMin?: number;
-  calendars?: Array<{ id: string; name: string }>;
+  calendars?: { id: string; name: string }[];
 }
 
 const W = '(?<![\\p{L}\\p{N}])'; // word start

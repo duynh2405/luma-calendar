@@ -80,6 +80,6 @@ export function bucketTasks(tasks: Task[], today: DayKey, upcomingDays = 7): Tas
   }
   const byDue = (a: Task, c: Task) =>
     (a.dueDay ?? '9999') < (c.dueDay ?? '9999') ? -1 : (a.dueDay ?? '9999') > (c.dueDay ?? '9999') ? 1 : c.priority - a.priority || a.sortOrder - c.sortOrder;
-  for (const k of Object.keys(b) as Array<keyof TaskBuckets>) b[k].sort(byDue);
+  for (const k of Object.keys(b) as (keyof TaskBuckets)[]) b[k].sort(byDue);
   return b;
 }

@@ -1,25 +1,25 @@
 import { router } from 'expo-router';
-import { ArrowLeftRight, Check, MoreHorizontal, Plus, Settings, Trash2 } from 'lucide-react-native';
+import { ArrowLeftRight, Check, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { Calendar } from '@/core/model/types';
-import { nowWall } from '@/core/time/zone';
 import { useData } from '@/data/store';
 import { useT } from '@/i18n';
 import { CalendarIcon } from '@/ui/icons';
 import { Button, Divider, HoverPressable, IconButton, Txt } from '@/ui/primitives';
 import { radius, space, useTheme } from '@/ui/theme';
 
+import { createEventNow, goTo, navItems, type Section } from '../shell/nav';
 import { MiniMonth } from './MiniMonth';
-import { newDraft, openCreate, webProps } from './shared';
+import { webProps } from './shared';
 import { useUi } from './ui-store';
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({ active: section, onNavigate }: { active: Section; onNavigate?: () => void }) {
+  const t = useTheme();
   const T = useT();
   const cursor = useUi((s) => s.cursor);
   const calendars = useData((s) => s.calendars);
-  const settings = useData((s) => s.settings);
   const [showArchived, setShowArchived] = useState(false);
   const all = Object.values(calendars)
     .filter((c) => !c.deletedAt)
@@ -35,19 +35,45 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         variant="primary"
         style={{ alignSelf: 'flex-start', paddingHorizontal: 16 }}
         onPress={() => {
-          const now = nowWall(settings.timeZone);
-          const day = cursor ?? now.day;
-          const startMin = Math.min(23 * 60, (Math.floor(now.minutes / 60) + 1) * 60);
-          openCreate(newDraft(day, startMin, startMin + settings.defaultDurationMin));
+          createEventNow();
           onNavigate?.();
         }}
       />
+      <View style={{ gap: 2 }}>
+        {navItems(T)
+          .filter((n) => n.key !== 'settings')
+          .map(({ key, label, icon: Icon }) => {
+            const on = key === section;
+            return (
+              <HoverPressable
+                key={key}
+                accessibilityRole="link"
+                accessibilityState={{ selected: on }}
+                onPress={() => {
+                  onNavigate?.();
+                  goTo(key);
+                }}
+                style={({ hovered }) => [styles.calRow, (hovered || on) && { backgroundColor: on ? t.accentSoft : t.surfaceAlt }]}
+              >
+                <Icon size={16} color={on ? t.accent : t.textMuted} strokeWidth={on ? 2.25 : 1.75} />
+                <Txt size="sm" weight={on ? 'semibold' : 'regular'} color={on ? 'accent' : 'text'}>
+                  {label}
+                </Txt>
+              </HoverPressable>
+            );
+          })}
+        <NavRow icon={Search} label={`${T('search')}  ·  Ctrl+K`} onPress={() => useUi.getState().setSearch(true)} />
+      </View>
       {cursor ? (
         <MiniMonth
           selected={cursor}
           onSelect={(d) => {
             useUi.getState().setCursor(d);
             onNavigate?.();
+            if (section !== 'calendar') {
+              useUi.getState().setView('day');
+              goTo('calendar');
+            }
           }}
         />
       ) : null}
@@ -89,7 +115,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           }}
         />
         <NavRow
-          icon={Settings}
+          icon={navItems(T)[3].icon}
           label={T('settings')}
           onPress={() => {
             onNavigate?.();

@@ -4,7 +4,6 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { dayInfo } from '@/core/lunar/dayinfo';
 import { eventDayRange } from '@/core/layout/layout';
-import type { CalendarEvent } from '@/core/model/types';
 import { addDays, type DayKey, maxDay } from '@/core/time/days';
 import { instantToWall, todayKey } from '@/core/time/zone';
 import { eventColor } from '@/data/store';
@@ -12,8 +11,8 @@ import { formatShortDate, lunarFullLabel, useLocale, useT } from '@/i18n';
 import { Button, HoverPressable, Txt } from '@/ui/primitives';
 import { useTheme } from '@/ui/theme';
 
-import { eventTimeLabel, useCalendarData } from './shared';
-import { useUi } from './ui-store';
+import { type DisplayEvent, openInstance } from './actions';
+import { eventTimeLabel, keyOf, useCalendarData, useDisplayEvents } from './shared';
 
 const PAGE_DAYS = 60;
 
@@ -21,14 +20,14 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
   const t = useTheme();
   const T = useT();
   const locale = useLocale();
-  const { calendars, events, settings, tz } = useCalendarData();
-  const openEditor = useUi((s) => s.openEditor);
+  const { calendars, settings, tz } = useCalendarData();
   const [span, setSpan] = useState(PAGE_DAYS);
+  const events = useDisplayEvents(cursor, addDays(cursor, span - 1));
   const today = todayKey(tz);
 
   const groups = useMemo(() => {
     const end = addDays(cursor, span - 1);
-    const byDay = new Map<DayKey, CalendarEvent[]>();
+    const byDay = new Map<DayKey, DisplayEvent[]>();
     for (const e of events) {
       const r = eventDayRange(e, tz);
       if (r.last < cursor || r.first > end) continue;
@@ -38,7 +37,7 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
         byDay.set(d, list);
       }
     }
-    const sortKey = (e: CalendarEvent) => (e.allDay ? -1 : instantToWall(e.start, tz).minutes);
+    const sortKey = (e: DisplayEvent) => (e.allDay ? -1 : instantToWall(e.start, tz).minutes);
     return [...byDay.entries()]
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([day, list]) => ({ day, list: list.sort((a, b) => sortKey(a) - sortKey(b)) }));
@@ -73,17 +72,21 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
             <View style={{ flex: 1, gap: 2 }}>
               {list.map((e) => (
                 <HoverPressable
-                  key={e.id}
-                  onPress={() => openEditor({ mode: 'edit', id: e.id })}
+                  key={keyOf(e)}
+                  onPress={() => openInstance(e)}
                   style={({ hovered }: { hovered?: boolean }) => [styles.row, hovered && { backgroundColor: t.surfaceHover }]}
                   accessibilityRole="button"
                 >
                   <View style={[styles.dot, { backgroundColor: eventColor(e, calendars) }]} />
                   <Txt size="sm" color="textMuted" tabular style={{ width: 110 }}>
-                    {e.allDay ? T('allDay') : eventTimeLabel(e, tz, settings.timeFormat)}
+                    {e.task ? T('taskLabel') : e.allDay ? T('allDay') : eventTimeLabel(e, tz, settings.timeFormat)}
                   </Txt>
                   <View style={{ flex: 1 }}>
-                    <Txt weight="medium" numberOfLines={1}>
+                    <Txt
+                      weight="medium"
+                      numberOfLines={1}
+                      style={e.task?.status === 'done' ? { textDecorationLine: 'line-through' } : undefined}
+                    >
                       {e.title}
                     </Txt>
                     {e.location ? (

@@ -117,7 +117,7 @@ export function occurrenceDays(start: DayKey, rule: Recurrence, from: DayKey, to
       for (let y = l.year; y < l.year + 400; y++) {
         if (dayKey(y - 1, 12, 1) > until) break;
         const leapM = leapMonthOfYear(y);
-        const months: Array<{ m: number; leap: boolean }> = [];
+        const months: { m: number; leap: boolean }[] = [];
         for (let m = 1; m <= 12; m++) {
           months.push({ m, leap: false });
           if (leapM === m) months.push({ m, leap: true });

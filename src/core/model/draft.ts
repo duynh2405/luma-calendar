@@ -4,6 +4,7 @@
  */
 import { addDays, type DayKey } from '../time/days';
 import { instantToWall, wallToInstant } from '../time/zone';
+import type { Recurrence } from '../recurrence/recurrence';
 import type { CalendarEvent, ID } from './types';
 
 export interface EventDraft {
@@ -18,6 +19,8 @@ export interface EventDraft {
   location: string;
   description: string;
   color: string | null;
+  /** Repeat rule (series only). */
+  recurrence?: Recurrence | null;
 }
 
 export function draftFromEvent(e: CalendarEvent, tz: string): EventDraft {
@@ -27,6 +30,7 @@ export function draftFromEvent(e: CalendarEvent, tz: string): EventDraft {
     location: e.location,
     description: e.description,
     color: e.color,
+    recurrence: e.recurrence ?? null,
   };
   if (e.allDay) {
     return { ...common, allDay: true, startDay: e.start, startMin: 9 * 60, endDay: addDays(e.end, -1), endMin: 10 * 60 };
@@ -44,6 +48,7 @@ export function eventFieldsFromDraft(d: EventDraft, tz: string) {
     location: d.location.trim(),
     description: d.description,
     color: d.color,
+    recurrence: d.recurrence ?? null,
   };
   if (d.allDay) {
     const endDay = d.endDay < d.startDay ? d.startDay : d.endDay;

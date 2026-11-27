@@ -9,16 +9,14 @@ import { Platform, Pressable, type PointerEvent as RNPointerEvent, StyleSheet, V
 import { dayInfo } from '@/core/lunar/dayinfo';
 import { layoutSpanRowVisible } from '@/core/layout/layout';
 import { shiftEvent } from '@/core/model/draft';
-import type { CalendarEvent } from '@/core/model/types';
 import { type DayKey, diffDays, isWeekend, monthGridDays, parseDayKey } from '@/core/time/days';
 import { todayKey } from '@/core/time/zone';
-import { useData } from '@/data/store';
 import { lunarCellLabel, useLocale, useT, weekdayShort } from '@/i18n';
 import { Txt } from '@/ui/primitives';
 import { useTheme } from '@/ui/theme';
 
-import { safely } from './actions';
-import { clamp, EventBar, newDraft, openCreate, useCalendarData } from './shared';
+import { changeInstanceTime, type DisplayEvent, openInstance } from './actions';
+import { clamp, EventBar, keyOf, newDraft, openCreate, useCalendarData, useDisplayEvents } from './shared';
 import { pointFrom, type Pt, rectOf, usePointerDrag } from './use-pointer-drag';
 import { useUi } from './ui-store';
 
@@ -29,12 +27,12 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
   const t = useTheme();
   const T = useT();
   const locale = useLocale();
-  const { events, settings, tz } = useCalendarData();
+  const { settings, tz } = useCalendarData();
   const editor = useUi((s) => s.editor);
-  const openEditor = useUi((s) => s.openEditor);
+  const taskPanel = useUi((s) => s.taskPanel);
   const gridRef = useRef<ComponentRef<typeof View>>(null);
   const [rowHeight, setRowHeight] = useState(100);
-  const [preview, setPreview] = useState<{ event: CalendarEvent; deltaDays: number } | null>(null);
+  const [preview, setPreview] = useState<{ event: DisplayEvent; deltaDays: number } | null>(null);
 
   const allDays = useMemo(() => monthGridDays(cursor, settings.weekStart), [cursor, settings.weekStart]);
   const cols = settings.showWeekends ? 7 : 5;
@@ -46,11 +44,12 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
     }
     return rows;
   }, [allDays, settings.showWeekends]);
+  const events = useDisplayEvents(allDays[0], allDays[41]);
 
   const displayEvents = useMemo(() => {
     if (!preview) return events;
-    const ghost = { ...preview.event, ...shiftEvent(preview.event, tz, preview.deltaDays * 1440) } as CalendarEvent;
-    return events.map((e) => (e.id === ghost.id ? ghost : e));
+    const ghost: DisplayEvent = { ...preview.event, ...shiftEvent(preview.event, tz, preview.deltaDays * 1440) };
+    return events.map((e) => (keyOf(e) === keyOf(ghost) ? ghost : e));
   }, [events, preview, tz]);
 
   const rowBars = useMemo(
@@ -70,7 +69,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
     return weeks[w][c] ?? null;
   }
 
-  const beginDrag = usePointerDrag<{ event: CalendarEvent; day: DayKey }>({
+  const beginDrag = usePointerDrag<{ event: DisplayEvent; day: DayKey }>({
     onMove(pt, _s, d) {
       const day = cellAt(pt);
       if (day) setPreview({ event: d.event, deltaDays: diffDays(day, d.day) });
@@ -78,13 +77,13 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
     onEnd(pt, _s, d, moved) {
       setPreview(null);
       if (!moved) {
-        openEditor({ mode: 'edit', id: d.event.id });
+        openInstance(d.event);
         return;
       }
       const day = cellAt(pt);
       const delta = day ? diffDays(day, d.day) : 0;
       if (delta) {
-        safely(() => useData.getState().updateEvent(d.event.id, shiftEvent(d.event, tz, delta * 1440), 'event-moved'), 'event-moved');
+        changeInstanceTime(d.event, shiftEvent(d.event, tz, delta * 1440), 'event-moved');
       }
     },
     onCancel: () => setPreview(null),
@@ -96,7 +95,8 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
     },
   });
 
-  const selectedId = editor?.mode === 'edit' ? editor.id : null;
+  const selectedId =
+    editor?.mode === 'edit' ? (editor.instance?.instanceKey ?? editor.id) : taskPanel ? `task:${taskPanel.id}` : null;
   const isWeb = Platform.OS === 'web';
 
   return (
@@ -202,7 +202,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                 .filter((b) => b.lane < lanesShown)
                 .map((b) => (
                   <View
-                    key={b.event.id}
+                    key={keyOf(b.event)}
                     style={{
                       position: 'absolute',
                       top: CELL_HEADER + b.lane * BAR_H,
@@ -217,12 +217,12 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                       showTime
                       continuesBefore={b.continuesBefore}
                       continuesAfter={b.continuesAfter}
-                      selected={selectedId === b.event.id}
-                      ghost={preview?.event.id === b.event.id}
+                      selected={selectedId === keyOf(b.event)}
+                      ghost={!!preview && keyOf(preview.event) === keyOf(b.event)}
                       onPointerDown={
-                        isWeb ? (e) => beginDrag(e, { event: b.event, day: cellAt(pointFrom(e)) ?? row[b.startCol] }) : undefined
+                        isWeb ? (e) => beginDrag(e, { event: b.event as DisplayEvent, day: cellAt(pointFrom(e)) ?? row[b.startCol] }) : undefined
                       }
-                      onPress={isWeb ? undefined : () => openEditor({ mode: 'edit', id: b.event.id })}
+                      onPress={isWeb ? undefined : () => openInstance(b.event as DisplayEvent)}
                     />
                   </View>
                 ))}

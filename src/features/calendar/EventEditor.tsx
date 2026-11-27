@@ -1,5 +1,5 @@
 /** Create / edit an event. Rendered in the side panel (desktop) or a full-screen sheet (mobile). */
-import { Copy, MapPin, Trash2, TriangleAlert, X } from 'lucide-react-native';
+import { CheckSquare, Copy, MapPin, Repeat, Trash2, TriangleAlert, X } from 'lucide-react-native';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
@@ -8,16 +8,18 @@ import { findConflicts } from '@/core/layout/layout';
 import { addWallMinutes, draftFromEvent, type EventDraft, eventFieldsFromDraft } from '@/core/model/draft';
 import { type ValidationError, validateEvent } from '@/core/model/validate';
 import type { CalendarEvent } from '@/core/model/types';
+import { asInstance, expandEvents } from '@/core/recurrence/expand';
 import { diffDays } from '@/core/time/days';
 import { activeCalendars, CALENDAR_COLORS, useData } from '@/data/store';
-import { canChiLine, lunarFullLabel, useT } from '@/i18n';
+import { canChiLine, lunarFullLabel, useLocale, useT } from '@/i18n';
 import type { StringKey } from '@/i18n/strings';
 import { DateInput, TimeInput } from '@/ui/DateTimeInputs';
 import { CalendarIcon } from '@/ui/icons';
 import { Button, Field, IconButton, Toggle, Txt } from '@/ui/primitives';
 import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
-import { safely } from './actions';
+import { contentOf, deleteInstance, isGeneratedOccurrence, safely } from './actions';
+import { describeRecurrence, RecurrencePicker } from './RecurrencePicker';
 import { eventTimeLabel, useCalendarData } from './shared';
 import { type EditorState, useUi } from './ui-store';
 
@@ -35,12 +37,16 @@ export function EventEditor() {
 function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
   const t = useTheme();
   const T = useT();
+  const locale = useLocale();
   const close = useUi((s) => s.closeEditor);
   const { calendars, events, settings, tz } = useCalendarData();
   const existing = useData((s) => (editor.mode === 'edit' ? s.events[editor.id] : undefined));
+  const linkedTask = useData((s) => (existing?.taskId ? s.tasks[existing.taskId] : undefined));
+  /** The opened occurrence of a series (null for single events, series masters and new events). */
+  const occurrence = editor.mode === 'edit' && editor.instance && isGeneratedOccurrence(editor.instance) ? editor.instance : null;
 
   const [draft, setDraft] = useState<EventDraft>(() =>
-    editor.mode === 'create' ? editor.draft : draftFromEvent(existing!, tz),
+    editor.mode === 'create' ? editor.draft : draftFromEvent(occurrence ?? existing!, tz),
   );
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -49,7 +55,7 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
 
   // If the event changes elsewhere (e.g. dragged in the grid) and the form is untouched, reload it,
   // so saving never overwrites a newer change with stale values.
-  if (existing && existing.updatedAt !== syncedAt && !dirty) {
+  if (existing && !occurrence && existing.updatedAt !== syncedAt && !dirty) {
     setSyncedAt(existing.updatedAt);
     setDraft(draftFromEvent(existing, tz));
   }
@@ -67,9 +73,15 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
 
   const cals = activeCalendars(calendars);
   const fields = eventFieldsFromDraft(draft, tz);
+  const selfKey = occurrence?.instanceKey ?? existing?.id;
   const conflicts = fields.allDay
     ? []
-    : findConflicts(events, fields.start, fields.end, existing?.id).slice(0, 3);
+    : findConflicts(
+        expandEvents(events, draft.startDay, draft.endDay, tz).map((i) => ({ ...i, id: i.instanceKey })),
+        fields.start,
+        fields.end,
+        selfKey,
+      ).slice(0, 3);
 
   const update = (patch: Partial<EventDraft>) => {
     setDirty(true);
@@ -96,6 +108,14 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
     if (errs.length) return;
     if (editor?.mode === 'create') {
       if (safely(() => useData.getState().createEvent(f), 'event-created') !== undefined) close();
+    } else if (existing && occurrence) {
+      useUi.getState().setScopePrompt({
+        kind: 'edit',
+        instance: occurrence,
+        content: contentOf({ ...existing, ...f } as CalendarEvent),
+        label: 'event-updated',
+        onDone: close,
+      });
     } else if (existing) {
       const ok = safely(() => {
         useData.getState().updateEvent(existing.id, f);
@@ -107,13 +127,15 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
 
   function remove() {
     if (!existing) return;
-    safely(() => useData.getState().deleteEvent(existing.id), 'event-deleted');
-    close();
+    deleteInstance(occurrence ?? asInstance(existing), close);
   }
 
   function duplicate() {
     if (!existing) return;
-    const id = safely(() => useData.getState().duplicateEvent(existing.id), 'event-duplicated');
+    // An occurrence is copied as a single event at that date.
+    const id = occurrence
+      ? safely(() => useData.getState().createEvent({ ...contentOf(occurrence), recurrence: null }), 'event-duplicated')
+      : safely(() => useData.getState().duplicateEvent(existing.id), 'event-duplicated');
     if (id) useUi.getState().openEditor({ mode: 'edit', id });
   }
 
@@ -177,6 +199,30 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
             </Txt>
           ) : null}
         </View>
+
+        {occurrence && existing?.recurrence ? (
+          <View style={[styles.seriesRow, { borderColor: t.border }]}>
+            <Repeat size={16} color={t.textMuted} strokeWidth={1.75} />
+            <Txt size="sm" style={{ flex: 1 }}>
+              {T('partOfSeries', {
+                rule: describeRecurrence(T, locale, existing.recurrence, existing.allDay ? existing.start : draftFromEvent(existing, existing.timeZone ?? tz).startDay),
+              })}
+            </Txt>
+            <Button size="sm" label={T('editSeries')} onPress={() => useUi.getState().openEditor({ mode: 'edit', id: existing.id })} />
+          </View>
+        ) : (
+          <RecurrencePicker value={draft.recurrence ?? null} start={draft.startDay} onChange={(recurrence) => update({ recurrence })} />
+        )}
+
+        {linkedTask ? (
+          <View style={[styles.seriesRow, { borderColor: t.border }]}>
+            <CheckSquare size={16} color={t.textMuted} strokeWidth={1.75} />
+            <Txt size="sm" style={{ flex: 1 }} numberOfLines={1}>
+              {T('linkedTask')}: {linkedTask.title}
+            </Txt>
+            <Button size="sm" label={T('openTask')} onPress={() => useUi.getState().openTask(linkedTask.id)} />
+          </View>
+        ) : null}
 
         {conflicts.length ? (
           <View style={[styles.warning, { backgroundColor: t.warningSoft }]}>
@@ -284,6 +330,7 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
   timeLabel: { width: 64 },
   warning: { flexDirection: 'row', gap: 8, padding: 10, borderRadius: radius.md },
+  seriesRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: radius.md, padding: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',

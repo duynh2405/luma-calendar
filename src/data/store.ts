@@ -12,8 +12,7 @@ import type { Calendar, CalendarEvent, ID, Settings, Task } from '@/core/model/t
 import { validateCalendar, validateEvent, validateTask } from '@/core/model/validate';
 import { deleteOccurrence, editOccurrence, type EditScope, type EventContent } from '@/core/recurrence/edit';
 import { completeTask, reopenTask } from '@/core/tasks/tasks';
-import { todayKey } from '@/core/time/zone';
-import { DEFAULT_TIME_ZONE } from '@/core/time/zone';
+import { DEFAULT_TIME_ZONE, todayKey } from '@/core/time/zone';
 
 import { recordStorage } from './storage';
 import { KEY, SCHEMA_VERSION } from './storage-types';

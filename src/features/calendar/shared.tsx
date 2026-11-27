@@ -1,16 +1,18 @@
+import { Check } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import type { EventDraft } from '@/core/model/draft';
-import type { CalendarEvent } from '@/core/model/types';
+import type { CalendarEvent, ID, Task } from '@/core/model/types';
+import { expandEvents } from '@/core/recurrence/expand';
 import { addDays, type DayKey } from '@/core/time/days';
 import { instantToWall, formatMinutes } from '@/core/time/zone';
-import { defaultCalendarId, eventColor, useData, visibleEvents } from '@/data/store';
-import { useT } from '@/i18n';
+import { defaultCalendarId, eventColor, taskColor, useData, visibleEvents, visibleTasks } from '@/data/store';
 import { radius, useTheme, withAlpha } from '@/ui/theme';
 import { Txt } from '@/ui/primitives';
 
+import type { DisplayEvent } from './actions';
 import { useUi } from './ui-store';
 
 export const SNAP_MIN = 15;
@@ -18,12 +20,52 @@ export const snap = (min: number, step = SNAP_MIN) => Math.round(min / step) * s
 export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 export function useCalendarData() {
-  const { calendars, events, settings } = useData(
-    useShallow((s) => ({ calendars: s.calendars, events: s.events, settings: s.settings })),
+  const { calendars, events, tasks, settings } = useData(
+    useShallow((s) => ({ calendars: s.calendars, events: s.events, tasks: s.tasks, settings: s.settings })),
   );
   const visible = useMemo(() => visibleEvents(calendars, events), [calendars, events]);
-  return { calendars, events: visible, settings, tz: settings.timeZone };
+  const shownTasks = useMemo(() => visibleTasks(calendars, tasks), [calendars, tasks]);
+  return { calendars, events: visible, tasks: shownTasks, settings, tz: settings.timeZone };
 }
+
+/** A task shown on its due day as an all-day item. */
+export function taskAsDisplay(t: Task, calendars: Record<ID, { color: string }>): DisplayEvent {
+  return {
+    id: `task:${t.id}`,
+    instanceKey: `task:${t.id}`,
+    masterId: `task:${t.id}`,
+    occurrenceDay: null,
+    calendarId: t.calendarId ?? '',
+    title: t.title,
+    description: '',
+    location: '',
+    color: taskColor(t, calendars as never),
+    allDay: true,
+    start: t.dueDay!,
+    end: addDays(t.dueDay!, 1),
+    timeZone: null,
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    deletedAt: null,
+    task: t,
+  };
+}
+
+/** Event occurrences + tasks with a due date that touch [from, to]. */
+export function useDisplayEvents(from: DayKey, to: DayKey): DisplayEvent[] {
+  const { calendars, events, tasks, tz } = useCalendarData();
+  return useMemo(() => {
+    const list: DisplayEvent[] = expandEvents(events, from, to, tz);
+    for (const t of tasks) {
+      if (t.parentId || !t.dueDay || t.dueDay < from || t.dueDay > to || t.status === 'cancelled') continue;
+      list.push(taskAsDisplay(t, calendars));
+    }
+    return list;
+  }, [events, tasks, calendars, from, to, tz]);
+}
+
+/** Stable UI key of a displayed item. */
+export const keyOf = (e: CalendarEvent) => (e as DisplayEvent).instanceKey ?? e.id;
 
 export function newDraft(day: DayKey, startMin: number, endMin: number, allDay = false, endDay = day): EventDraft | null {
   const calendarId = defaultCalendarId(useData.getState().calendars);
@@ -85,7 +127,9 @@ export function EventBar({
   const t = useTheme();
   const { calendars, tz, settings } = useCalendarData();
   const color = eventColor(event, calendars);
-  const solid = event.allDay || !compact;
+  const task = (event as DisplayEvent).task;
+  const done = task?.status === 'done';
+  const solid = (event.allDay || !compact) && !task;
   const time = showTime && !event.allDay ? formatMinutes(instantToWall(event.start, tz).minutes, settings.timeFormat) : '';
   return (
     <Pressable
@@ -107,22 +151,37 @@ export function EventBar({
         selected && { outlineColor: color, outlineWidth: 1, outlineStyle: 'solid' } as object,
       ]}
     >
-      {!solid ? <View style={[styles.dot, { backgroundColor: color }]} /> : null}
+      {task ? (
+        <Pressable
+          onPress={() => useData.getState().toggleTaskDone(task.id)}
+          onPointerDown={(e: { stopPropagation: () => void }) => e.stopPropagation()}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: done }}
+          hitSlop={6}
+          style={[styles.check, { borderColor: color, backgroundColor: done ? color : 'transparent' }]}
+        >
+          {done ? <Check size={9} color="#fff" strokeWidth={3} /> : null}
+        </Pressable>
+      ) : !solid ? (
+        <View style={[styles.dot, { backgroundColor: color }]} />
+      ) : null}
       {solid && !continuesBefore ? <View style={[styles.stripe, { backgroundColor: color }]} /> : null}
       {time ? (
         <Txt size="xs" color="textMuted" tabular numberOfLines={1}>
           {time}
         </Txt>
       ) : null}
-      <Txt size="xs" weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
+      <Txt
+        size="xs"
+        weight="medium"
+        numberOfLines={1}
+        color={done ? 'textFaint' : 'text'}
+        style={[{ flexShrink: 1 }, done && { textDecorationLine: 'line-through' }]}
+      >
         {event.title}
       </Txt>
     </Pressable>
   );
-}
-
-export function useEventsT() {
-  return useT();
 }
 
 const styles = StyleSheet.create({
@@ -137,4 +196,5 @@ const styles = StyleSheet.create({
   } as object,
   stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
   dot: { width: 6, height: 6, borderRadius: 3 },
+  check: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

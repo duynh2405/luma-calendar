@@ -20,6 +20,7 @@ export function TrashScreen() {
   const locale = useLocale();
   const insets = useSafeAreaInsets();
   const events = useData((s) => s.events);
+  const tasks = useData((s) => s.tasks);
   const calendars = useData((s) => s.calendars);
   const settings = useData((s) => s.settings);
   const [confirm, setConfirm] = useState<string[] | null>(null);
@@ -29,6 +30,15 @@ export function TrashScreen() {
     [events],
   );
   const trashedCalendars = Object.values(calendars).filter((c) => c.deletedAt);
+  // Subtasks deleted together with their parent are restored with it, so list top-level ones.
+  const trashedTasks = useMemo(
+    () =>
+      Object.values(tasks)
+        .filter((x) => x.deletedAt && !(x.parentId && tasks[x.parentId]?.deletedAt === x.deletedAt))
+        .sort((a, b) => (a.deletedAt! < b.deletedAt! ? 1 : -1)),
+    [tasks],
+  );
+  const allIds = [...trashed.map((e) => e.id), ...Object.values(tasks).filter((x) => x.deletedAt).map((x) => `task:${x.id}`)];
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top }}>
@@ -37,8 +47,8 @@ export function TrashScreen() {
         <Txt size="xl" weight="semibold" style={{ flex: 1 }}>
           {T('trash')}
         </Txt>
-        {trashed.length ? (
-          <Button label={T('emptyTrash')} variant="danger" size="sm" onPress={() => setConfirm(trashed.map((e) => e.id))} />
+        {allIds.length ? (
+          <Button label={T('emptyTrash')} variant="danger" size="sm" onPress={() => setConfirm(allIds)} />
         ) : null}
       </View>
       <ScrollView contentContainerStyle={styles.content}>
@@ -53,7 +63,7 @@ export function TrashScreen() {
             <Button size="sm" label={T('restore')} onPress={() => safely(() => useData.getState().restoreCalendar(c.id), 'calendar-restored')} />
           </View>
         ))}
-        {trashed.length === 0 && trashedCalendars.length === 0 ? (
+        {trashed.length === 0 && trashedCalendars.length === 0 && trashedTasks.length === 0 ? (
           <Txt color="textMuted" style={{ textAlign: 'center', padding: 32 }}>
             {T('trashEmpty')}
           </Txt>
@@ -77,6 +87,22 @@ export function TrashScreen() {
             </View>
           );
         })}
+        {trashedTasks.map((x) => (
+          <View key={x.id} style={[styles.row, { borderBottomColor: t.border }]}>
+            <View style={[styles.dot, { backgroundColor: x.calendarId ? calendars[x.calendarId]?.color ?? '#868E96' : '#868E96', borderRadius: 2 }]} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Txt weight="medium" numberOfLines={1}>
+                {x.title}
+              </Txt>
+              <Txt size="sm" color="textMuted" numberOfLines={1}>
+                {T('taskLabel')}
+                {x.dueDay ? ` · ${formatShortDate(locale, x.dueDay)}` : ''}
+              </Txt>
+            </View>
+            <Button size="sm" label={T('restore')} onPress={() => safely(() => useData.getState().restoreTask(x.id), 'task-restored')} />
+            <Button size="sm" variant="danger" label={T('deletePermanently')} onPress={() => setConfirm([`task:${x.id}`])} />
+          </View>
+        ))}
       </ScrollView>
       <Dialog
         visible={!!confirm}
@@ -89,7 +115,15 @@ export function TrashScreen() {
               label={T('deletePermanently')}
               variant="danger"
               onPress={() => {
-                if (confirm) safely(() => useData.getState().purgeEvents(confirm), 'event-purged');
+                if (confirm) {
+                  const taskIds = confirm.filter((id) => id.startsWith('task:')).map((id) => id.slice(5));
+                  // Purging a task also purges its trashed subtasks.
+                  const withSubs = Object.values(useData.getState().tasks).filter((x) => x.deletedAt && x.parentId && taskIds.includes(x.parentId)).map((x) => x.id);
+                  safely(() => {
+                    useData.getState().purgeEvents(confirm.filter((id) => !id.startsWith('task:')));
+                    useData.getState().purgeTasks([...taskIds, ...withSubs]);
+                  }, 'event-purged');
+                }
                 setConfirm(null);
               }}
             />

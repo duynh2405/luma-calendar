@@ -1,4 +1,7 @@
+import { EN_M2, VI_M2 } from './strings-m2';
+
 const vi = {
+  ...VI_M2,
   appName: 'Luma Calendar',
   today: 'Hôm nay',
   create: 'Tạo',
@@ -130,6 +133,7 @@ const vi = {
 export type StringKey = keyof typeof vi;
 
 const en: Record<StringKey, string> = {
+  ...EN_M2,
   appName: 'Luma Calendar',
   today: 'Today',
   create: 'Create',
