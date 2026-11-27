@@ -3,6 +3,7 @@
 ## [Chưa phát hành] – phản hồi sau M2
 
 ### Thêm
+- Nhập lịch từ file .ics (Cài đặt → Dữ liệu): sự kiện cả ngày/có giờ/múi giờ, lặp lại, ngoại lệ, nhắc; nhập lại không trùng.
 - **Giao diện thao tác mới:** mỗi việc là một nút (bấm để mở chi tiết); rê vào ngày hiện dấu + lớn giữa ô, bấm chỗ bất kỳ trong ô để tạo việc; rê vào việc hiện X xóa (có hộp xác nhận). Chi tiết mở dạng hộp pop-up giữa màn hình, không còn cột cố định bên phải.
 - Cột trái: lịch Dương (trên) và Âm (dưới) cùng dạng bảng tháng, cùng chọn ngày, mỗi bảng có tóm tắt ngày đang chọn.
 - Mục "Hôm nay" được thay bằng **Công việc sắp tới**: 3–5 việc gần nhất tính từ ngày đang xem.

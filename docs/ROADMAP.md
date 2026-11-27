@@ -16,4 +16,9 @@ Mỗi milestone ra một bản chạy được. Chủ sản phẩm duyệt rồi
 | M8 | ICS nhập/xuất + feed đăng ký, widget Android/iOS, deep link | |
 | M9 | Kiểm thử toàn diện, hiệu năng, tài liệu người dùng, phát hành | |
 
-Đã bỏ khỏi lộ trình theo quyết định 27/11/2026: tích hợp Google Calendar API, quản lý tài nguyên thiết bị.
+Đồng bộ nguồn ngoài (quyết định 27/11/2026, chỉ **một chiều: nguồn ngoài → Luma**, không làm hai chiều):
+1. ✅ Nhập file .ics (Google/Apple/Outlook/Notion xuất được) thành lịch riêng, nhập lại không bị trùng.
+2. Đăng ký link ICS tự cập nhật (M8).
+3. Google Calendar + Google Tasks (đọc, OAuth, token lưu phía server) — sau M3/M4, bạn cần tạo OAuth client.
+
+Đã bỏ khỏi lộ trình: quản lý tài nguyên thiết bị. (Tích hợp Google Calendar API được đưa trở lại theo hướng một chiều ở trên.)

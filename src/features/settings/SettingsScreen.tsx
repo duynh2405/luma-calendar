@@ -16,6 +16,7 @@ import { space, useTheme } from '@/ui/theme';
 import { safely } from '../calendar/actions';
 import { Toast } from '../calendar/Toast';
 import { AccountPanel } from './AccountPanel';
+import { importIcsText } from './ics-import';
 import { useUi } from '../calendar/ui-store';
 
 const toHHMM = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -61,6 +62,27 @@ export function SettingsScreen() {
     const stats = safely(() => useData.getState().importBackup(text));
     if (stats) useUi.getState().showToast(T('importDone', stats), stats.added + stats.updated > 0);
     else useUi.getState().showToast(T('importFailed'));
+  }
+
+  async function doImportIcs() {
+    let text: string | null = null;
+    try {
+      text = await pickTextFile('text/calendar,.ics');
+    } catch (e) {
+      useUi.getState().showToast(String(e));
+      return;
+    }
+    if (!text) return;
+    const r = safely(() => importIcsText(text, 'ICS'));
+    const vi = s.locale === 'vi';
+    if (r && r.parsed.events > 0)
+      useUi.getState().showToast(
+        vi
+          ? `Đã nhập ${r.parsed.events} sự kiện vào lịch "${r.name}" (${r.parsed.recurring} lặp lại${r.parsed.approximated ? `, ${r.parsed.approximated} xấp xỉ` : ''}, bỏ qua ${r.parsed.skipped})`
+          : `Imported ${r.parsed.events} events into "${r.name}"`,
+        true,
+      );
+    else useUi.getState().showToast(vi ? 'Không đọc được sự kiện nào từ file .ics' : 'No events found in .ics file');
   }
 
   return (
@@ -188,6 +210,7 @@ export function SettingsScreen() {
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             <Button label={T('exportJson')} onPress={doExport} />
             <Button label={T('importJson')} onPress={doImport} />
+            <Button label={s.locale === 'vi' ? 'Nhập lịch .ics (Google, Apple, Outlook…)' : 'Import .ics'} onPress={doImportIcs} />
           </View>
         </Section>
 

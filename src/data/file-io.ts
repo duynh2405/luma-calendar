@@ -3,6 +3,6 @@ export async function saveTextFile(_filename: string, _text: string): Promise<vo
   throw new Error('not-supported-yet');
 }
 
-export async function pickTextFile(): Promise<string | null> {
+export async function pickTextFile(_accept?: string): Promise<string | null> {
   throw new Error('not-supported-yet');
 }

@@ -68,3 +68,6 @@ Web dùng SpeechRecognition của trình duyệt (vi-VN, miễn phí, không g�
 
 ## ADR-017 · Thao tác kiểu "mỗi việc là một nút" (27/11/2026) — yêu cầu của chủ sản phẩm
 Bỏ panel chi tiết cố định bên phải: chi tiết sự kiện/công việc chỉ mở dạng hộp pop-up khi bấm. Bấm bất kỳ đâu trong ô ngày tạo việc mới; rê vào ngày hiện +, rê vào việc hiện X (xóa có xác nhận; riêng chuỗi lặp dùng hộp chọn phạm vi). Lớp ngoài của mỗi việc không dùng `<button>` để tránh lồng nút trong nút. Màn "Hôm nay" thay bằng "Công việc sắp tới" (3/5 việc gần nhất từ ngày đang xem).
+
+## ADR-018 · Đồng bộ nguồn ngoài một chiều (27/11/2026) — yêu cầu của chủ sản phẩm
+Đảo quyết định "không tích hợp Google Calendar": cho phép kéo dữ liệu từ Google Calendar/Tasks và nền tảng khác vào Luma, **một chiều**. Thứ tự: ICS nhập file (xong) → link ICS đăng ký → Google OAuth (token ở Supabase Edge Function). Id sự kiện nhập từ ICS sinh từ UID nên nhập lại là cập nhật. RRULE ngoài tập hỗ trợ được nhập xấp xỉ và báo số lượng.
