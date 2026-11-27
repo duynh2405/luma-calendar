@@ -14,6 +14,7 @@ import { lunarMonthLength } from '@/core/lunar/lunar';
 import { addMonths, type DayKey, monthGridDays, parseDayKey } from '@/core/time/days';
 import { todayKey } from '@/core/time/zone';
 import { useData } from '@/data/store';
+import { useUi } from './ui-store';
 import { HoverPressable, IconButton, Txt } from '@/ui/primitives';
 import { radius, useTheme } from '@/ui/theme';
 
@@ -28,13 +29,14 @@ export function DualMini({ selected, onSelect }: { selected: DayKey; onSelect: (
     setLastSelected(selected);
     setMonth(selected);
   }
+  const hover = useUi((s) => s.hoverDay);
   const days = monthGridDays(month, weekStart);
   const nav = (n: number) => setMonth(addMonths(month, n));
 
   return (
     <View style={{ gap: 14 }}>
-      <Grid mode="solar" days={days} month={month} selected={selected} onSelect={onSelect} onNav={nav} />
-      <Grid mode="lunar" days={days} month={month} selected={selected} onSelect={onSelect} onNav={nav} />
+      <Grid mode="solar" days={days} month={month} selected={selected} preview={hover} onSelect={onSelect} onNav={nav} />
+      <Grid mode="lunar" days={days} month={month} selected={selected} preview={hover} onSelect={onSelect} onNav={nav} />
     </View>
   );
 }
@@ -44,6 +46,7 @@ function Grid({
   days,
   month,
   selected,
+  preview,
   onSelect,
   onNav,
 }: {
@@ -51,6 +54,7 @@ function Grid({
   days: DayKey[];
   month: DayKey;
   selected: DayKey;
+  preview: DayKey | null;
   onSelect: (d: DayKey) => void;
   onNav: (n: number) => void;
 }) {
@@ -71,8 +75,9 @@ function Grid({
       : `Lunar · M${mid.month}${mid.leap ? 'L' : ''} ${canChiYear(mid.year)}`
     : `${vi ? 'Dương lịch' : 'Solar'} · ${m}/${parseDayKey(month).y}`;
 
-  const sel = parseDayKey(selected);
-  const sl = dayInfo(selected);
+  const shown = preview ?? selected;
+  const sel = parseDayKey(shown);
+  const sl = dayInfo(shown);
   const holidays = sl.holidays.map((h) => h.name[locale]).join(' · ');
   const len = lunarMonthLength(sl.lunar.month, sl.lunar.year, sl.lunar.leap);
   const summary = lunar
@@ -80,7 +85,7 @@ function Grid({
         `${vi ? 'Ngày' : 'Day'} ${sl.lunar.day}/${sl.lunar.month}${sl.lunar.leap ? (vi ? ' nhuận' : ' leap') : ''} ${canChiYear(sl.lunar.year)}`,
         `${vi ? 'Ngày' : 'Day'} ${canChiDay(sel.d, sel.m, sel.y)} · ${vi ? 'tháng' : 'month'} ${canChiMonth(sl.lunar.month, sl.lunar.year)}${len ? ` (${len === 30 ? (vi ? 'đủ' : '30d') : vi ? 'thiếu' : '29d'})` : ''}`,
       ]
-    : [formatLongDate(locale, selected), `${vi ? 'Âm lịch' : 'Lunar'}: ${sl.lunar.day}/${sl.lunar.month}${sl.lunar.leap ? 'N' : ''}`];
+    : [formatLongDate(locale, shown), `${vi ? 'Âm lịch' : 'Lunar'}: ${sl.lunar.day}/${sl.lunar.month}${sl.lunar.leap ? 'N' : ''}`];
 
   return (
     <View style={{ gap: 4 }}>
@@ -105,6 +110,7 @@ function Grid({
           {days.slice(w * 7, w * 7 + 7).map((d) => {
             const isToday = d === today;
             const isSel = d === selected;
+            const isPrev = !!preview && d === preview && !isSel;
             const inMonth = parseDayKey(d).m === m;
             const info = dayInfo(d);
             const label = lunar ? lunarCellLabel(info.lunar) : String(parseDayKey(d).d);
@@ -119,6 +125,7 @@ function Grid({
                   styles.day,
                   hovered && { backgroundColor: t.surfaceAlt },
                   isToday && { backgroundColor: accent },
+                  isPrev && { borderWidth: 2, borderColor: accent, backgroundColor: accent + '22' },
                   isSel && { borderWidth: 2, borderColor: accent },
                 ]}
               >

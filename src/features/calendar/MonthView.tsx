@@ -12,7 +12,7 @@ import { layoutSpanRowVisible } from '@/core/layout/layout';
 import { shiftEvent } from '@/core/model/draft';
 import { type DayKey, diffDays, isWeekend, monthGridDays, parseDayKey } from '@/core/time/days';
 import { todayKey } from '@/core/time/zone';
-import { lunarCellLabel, useLocale, useT, weekdayShort } from '@/i18n';
+import { useLocale, useT, weekdayShort } from '@/i18n';
 import { Txt } from '@/ui/primitives';
 import { useTheme, withAlpha } from '@/ui/theme';
 
@@ -28,6 +28,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
   const t = useTheme();
   const T = useT();
   const locale = useLocale();
+  const vi = locale === 'vi';
   const { settings, tz } = useCalendarData();
   const editor = useUi((s) => s.editor);
   const taskPanel = useUi((s) => s.taskPanel);
@@ -160,8 +161,14 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                             openCreate(newDraft(d, 9 * 60, 10 * 60, true));
                           }
                     }
-                    onHoverIn={() => setHoverDay(d)}
-                    onHoverOut={() => setHoverDay((h) => (h === d ? null : h))}
+                    onHoverIn={() => {
+                      setHoverDay(d);
+                      useUi.getState().setHoverDay(d);
+                    }}
+                    onHoverOut={() => {
+                      setHoverDay((h) => (h === d ? null : h));
+                      if (useUi.getState().hoverDay === d) useUi.getState().setHoverDay(null);
+                    }}
                     accessibilityLabel={d}
                   >
                     <View style={styles.cellHeader}>
@@ -185,7 +192,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                           color={isToday ? 'accentText' : inMonth ? 'text' : 'textFaint'}
                           tabular
                         >
-                          {Number(d.slice(8)) === 1 && !isToday ? `${Number(d.slice(8))}/${parseDayKey(d).m}` : Number(d.slice(8))}
+                          {`${Number(d.slice(8))}/${parseDayKey(d).m}`}
                         </Txt>
                       </Pressable>
                       {holiday ? (
@@ -197,7 +204,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                       )}
                       {settings.showLunar ? (
                         <Txt size="xs" color={info.isLunarMarker ? 'holiday' : 'lunar'} tabular>
-                          {lunarCellLabel(info.lunar)}
+                          {`${info.lunar.day}/${info.lunar.month}${info.lunar.leap ? 'N' : ''} ${vi ? 'ÂL' : 'LN'}`}
                         </Txt>
                       ) : null}
                     </View>

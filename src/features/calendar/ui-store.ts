@@ -32,6 +32,9 @@ export type ScopePrompt =
 interface UiState {
   view: ViewMode;
   cursor: DayKey | null;
+  /** Day under the mouse in the main calendar; the left calendars preview it. */
+  hoverDay: DayKey | null;
+  setHoverDay: (d: DayKey | null) => void;
   editor: EditorState;
   /** Task detail panel (shares the side panel with the event editor). */
   taskPanel: null | { id: ID; key: number };
@@ -71,6 +74,8 @@ let toastSeq = 0;
 export const useUi = create<UiState>((set, get) => ({
   view: 'week',
   cursor: null,
+  hoverDay: null,
+  setHoverDay: (hoverDay) => set({ hoverDay }),
   editor: null,
   taskPanel: null,
   draftPreview: null,
