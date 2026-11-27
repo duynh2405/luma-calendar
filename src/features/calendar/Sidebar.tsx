@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
-import { ArrowLeftRight, Check, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react-native';
+import { ArrowLeftRight, Check, MoreHorizontal, Plus, Moon, Search, Sun, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { Calendar } from '@/core/model/types';
 import { useData } from '@/data/store';
-import { useT } from '@/i18n';
+import { useLocale, useT } from '@/i18n';
 import { CalendarIcon } from '@/ui/icons';
 import { Button, Divider, HoverPressable, IconButton, Txt } from '@/ui/primitives';
 import { radius, space, useTheme } from '@/ui/theme';
@@ -17,6 +17,7 @@ import { useUi } from './ui-store';
 
 export function Sidebar({ active: section, onNavigate }: { active: Section; onNavigate?: () => void }) {
   const t = useTheme();
+  const vi = useLocale() === 'vi';
   const T = useT();
   const cursor = useUi((s) => s.cursor);
   const calendars = useData((s) => s.calendars);
@@ -106,6 +107,11 @@ export function Sidebar({ active: section, onNavigate }: { active: Section; onNa
       <Divider />
       <View style={{ gap: 2 }}>
         <NavRow icon={ArrowLeftRight} label={T('converter')} onPress={() => useUi.getState().setConverter(true)} />
+        <NavRow
+          icon={t.scheme === 'dark' ? Sun : Moon}
+          label={t.scheme === 'dark' ? (vi ? 'Giao diện sáng' : 'Light mode') : vi ? 'Giao diện tối' : 'Dark mode'}
+          onPress={() => useData.getState().updateSettings({ theme: t.scheme === 'dark' ? 'light' : 'dark' })}
+        />
         <NavRow
           icon={Trash2}
           label={T('trash')}

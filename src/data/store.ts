@@ -19,7 +19,7 @@ import { KEY, SCHEMA_VERSION } from './storage-types';
 
 export const DEFAULT_SETTINGS: Settings = {
   locale: 'vi',
-  theme: 'system',
+  theme: 'light',
   timeZone: DEFAULT_TIME_ZONE,
   weekStart: 1,
   timeFormat: '24h',
@@ -224,6 +224,8 @@ export const useData = create<DataState>((set, get) => {
         settings.workStart = DEFAULT_SETTINGS.workStart;
         settings.workEnd = DEFAULT_SETTINGS.workEnd;
       }
+      // Light means light: the old default "follow system" made the app dark on dark-mode machines.
+      if (settings.theme === 'system') settings.theme = 'light';
       set({ ...data, settings, loaded: true });
 
       const meta = raw[KEY.meta] as { schema?: number; createdAt?: string } | undefined;
