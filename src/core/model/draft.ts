@@ -21,6 +21,8 @@ export interface EventDraft {
   color: string | null;
   /** Repeat rule (series only). */
   recurrence?: Recurrence | null;
+  /** Minutes before start; [] = no reminder. */
+  reminders?: number[];
 }
 
 export function draftFromEvent(e: CalendarEvent, tz: string): EventDraft {
@@ -31,6 +33,7 @@ export function draftFromEvent(e: CalendarEvent, tz: string): EventDraft {
     description: e.description,
     color: e.color,
     recurrence: e.recurrence ?? null,
+    reminders: e.reminders ?? [],
   };
   if (e.allDay) {
     return { ...common, allDay: true, startDay: e.start, startMin: 9 * 60, endDay: addDays(e.end, -1), endMin: 10 * 60 };
@@ -49,6 +52,7 @@ export function eventFieldsFromDraft(d: EventDraft, tz: string) {
     description: d.description,
     color: d.color,
     recurrence: d.recurrence ?? null,
+    reminders: d.reminders ?? [],
   };
   if (d.allDay) {
     const endDay = d.endDay < d.startDay ? d.startDay : d.endDay;

@@ -76,3 +76,6 @@ Bỏ panel chi tiết cố định bên phải: chi tiết sự kiện/công vi�
 - Chỉ đồng bộ các cài đặt dùng chung (SYNCED_SETTINGS); ngôn ngữ, giao diện, múi giờ là của từng máy. Bản ghi `settings/main`, hợp nhất 3 chiều như dữ liệu khác.
 - Sao lưu tự động: 1 bản/ngày, giữ 7, lưu cạnh dữ liệu (khóa `backup:`); khôi phục = hợp nhất theo updatedAt.
 - `ics-proxy` (verify_jwt bật): chỉ https, chặn host nội bộ/IP riêng, không theo chuyển hướng, tối đa 5 MB, 10 giây.
+
+## ADR-020 · Nhắc việc bằng thông báo cục bộ (27/11/2026)
+Lõi `planReminders` (thuần TS) tính danh sách thông báo; nền tảng chỉ việc đặt lịch (`expo-notifications` trên native, Notification API + timer trên web). Id thông báo ổn định theo (việc, lần lặp, mốc) nên đặt lại không bị trùng. Việc cả ngày/hạn không giờ tính 09:00. Web Push (nhắc khi đóng trình duyệt) cần máy chủ push, để sau. Build APK qua EAS (`eas.json`, profile preview) hoặc SDK cục bộ — cần chủ sản phẩm chọn.

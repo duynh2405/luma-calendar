@@ -18,6 +18,7 @@ import { Toast } from '../calendar/Toast';
 import { AccountPanel } from './AccountPanel';
 import { BackupPanel } from './BackupPanel';
 import { FeedsPanel } from './FeedsPanel';
+import { NotificationsPanel } from './NotificationsPanel';
 import { importIcsText } from './ics-import';
 import { useUi } from '../calendar/ui-store';
 
@@ -214,6 +215,10 @@ export function SettingsScreen() {
             <Button label={T('importJson')} onPress={doImport} />
             <Button label={s.locale === 'vi' ? 'Nhập lịch .ics (Google, Apple, Outlook…)' : 'Import .ics'} onPress={doImportIcs} />
           </View>
+        </Section>
+
+        <Section title={s.locale === 'vi' ? 'Thông báo nhắc việc' : 'Reminders'}>
+          <NotificationsPanel />
         </Section>
 
         <Section title={s.locale === 'vi' ? 'Đăng ký lịch từ link (ICS)' : 'Calendar subscriptions (ICS)'}>

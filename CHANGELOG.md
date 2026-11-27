@@ -3,6 +3,7 @@
 ## [Chưa phát hành] – phản hồi sau M2
 
 ### Thêm
+- **Nhắc việc (M4, phần lõi):** chọn nhắc (đúng giờ / 10 phút / 30 phút / 1 giờ / 1 ngày) cho sự kiện và công việc; lõi lên lịch thuần có test (bỏ qua việc đã xong/đã xóa, mở rộng sự kiện lặp, tối đa 60 thông báo); thông báo cục bộ trên Android/iOS (chạy offline), thông báo trình duyệt khi đang mở app trên web; mục Thông báo trong Cài đặt. Thêm `eas.json` để build APK.
 - **Sao lưu tự động** mỗi ngày trên máy (giữ 7 bản), khôi phục hoặc tải về trong Cài đặt.
 - **PWA:** cài như app (manifest, icon), mở được khi mất mạng (service worker, chỉ bật khi chạy trên tên miền thật).
 - **Đồng bộ cài đặt** giữa các máy (tuần bắt đầu, giờ làm việc, kiểu giờ, mặc định xem…; ngôn ngữ, giao diện, múi giờ giữ riêng từng máy).

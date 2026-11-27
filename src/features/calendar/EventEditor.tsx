@@ -19,6 +19,7 @@ import { Button, Field, IconButton, Toggle, Txt } from '@/ui/primitives';
 import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
 import { contentOf, isGeneratedOccurrence, requestDelete, safely, toggleInstanceDone } from './actions';
+import { ReminderPicker } from './ReminderPicker';
 import { VersionHistory } from './VersionHistory';
 import { describeRecurrence, RecurrencePicker } from './RecurrencePicker';
 import { eventTimeLabel, useCalendarData } from './shared';
@@ -227,6 +228,8 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
         ) : (
           <RecurrencePicker value={draft.recurrence ?? null} start={draft.startDay} onChange={(recurrence) => update({ recurrence })} />
         )}
+
+        <ReminderPicker value={draft.reminders ?? []} onChange={(reminders) => update({ reminders })} />
 
         {linkedTask ? (
           <View style={[styles.seriesRow, { borderColor: t.border }]}>

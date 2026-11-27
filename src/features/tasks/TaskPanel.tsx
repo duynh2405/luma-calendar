@@ -17,6 +17,7 @@ import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
 import { safely } from '../calendar/actions';
 import { RecurrencePicker } from '../calendar/RecurrencePicker';
+import { ReminderPicker } from '../calendar/ReminderPicker';
 import { eventTimeLabel } from '../calendar/shared';
 import { useUi } from '../calendar/ui-store';
 
@@ -170,6 +171,7 @@ function TaskForm({ task }: { task: Task }) {
 
         {task.dueDay ? (
           <Section label={T('repeat')}>
+            <ReminderPicker value={task.reminders ?? []} onChange={(reminders) => update({ reminders })} />
             <RecurrencePicker value={task.recurrence} start={task.dueDay} onChange={(recurrence) => update({ recurrence })} />
           </Section>
         ) : null}

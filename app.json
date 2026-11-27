@@ -19,7 +19,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.luma.calendar"
+      "package": "com.luma.calendar",
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "output": "single",
@@ -35,7 +41,13 @@
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#4A5BB5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

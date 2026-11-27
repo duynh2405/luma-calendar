@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { runAutoBackup } from '@/data/autobackup';
 import { startFeedRefresh } from '@/data/icsfeeds';
+import { startReminders } from '@/notifications/start';
 import { useSync } from '@/sync/service';
 import { useData } from '@/data/store';
 import { useTheme } from '@/ui/theme';
@@ -37,6 +38,7 @@ export default function RootLayout() {
       .then(() => {
         void runAutoBackup();
         startFeedRefresh();
+        startReminders();
         return useSync.getState().start();
       });
   }, []);
