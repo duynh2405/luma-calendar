@@ -4,6 +4,7 @@
  *  - ids are generated on the client (UUIDv7, time-ordered)
  *  - deletes are soft (deletedAt) so they can be undone and synced
  */
+import type { Recurrence } from '../recurrence/recurrence';
 import type { DayKey } from '../time/days';
 
 export type ID = string;
@@ -32,6 +33,16 @@ interface EventBase extends BaseRecord {
   location: string;
   /** Per-event color override; null = use the calendar color. */
   color: string | null;
+  /** Repeat rule (series master only). Absent in schema-1 records = not recurring. */
+  recurrence?: Recurrence | null;
+  /** Occurrence days removed from the series (deleted single occurrences). */
+  exdates?: DayKey[];
+  /** Set on an "override": a single modified occurrence of a series. */
+  recurrenceMasterId?: ID | null;
+  /** The original occurrence day this override replaces. */
+  recurrenceDay?: DayKey | null;
+  /** Time block: the task this event schedules. */
+  taskId?: ID | null;
 }
 
 /** Timed event: start/end are UTC instants (ISO); timeZone is the zone it was created in. */
@@ -51,6 +62,50 @@ export interface AllDayEvent extends EventBase {
 }
 
 export type CalendarEvent = TimedEvent | AllDayEvent;
+
+// ---------------------------------------------------------------------------
+// Tasks
+// ---------------------------------------------------------------------------
+
+export type TaskStatus = 'todo' | 'doing' | 'waiting' | 'done' | 'cancelled';
+/** 0 none · 1 low · 2 medium · 3 high */
+export type Priority = 0 | 1 | 2 | 3;
+
+export interface ChecklistItem {
+  id: ID;
+  text: string;
+  done: boolean;
+}
+
+export interface Task extends BaseRecord {
+  title: string;
+  notes: string;
+  /** Category (same "calendars" as events). null + no dates + no parent = Inbox. */
+  calendarId: ID | null;
+  /** Subtask of another task. */
+  parentId: ID | null;
+  status: TaskStatus;
+  priority: Priority;
+  startDay: DayKey | null;
+  dueDay: DayKey | null;
+  /** Optional due time (minutes since midnight, display zone). */
+  dueMin: number | null;
+  estimateMin: number | null;
+  /** Manual progress 0–100; null = computed from subtasks/checklist. */
+  progress: number | null;
+  checklist: ChecklistItem[];
+  tags: string[];
+  links: string[];
+  /** Repeat: completing the task moves dueDay to the next occurrence. */
+  recurrence: Recurrence | null;
+  /** History of completions (recurring and one-off). */
+  completions: Array<{ at: string; dueDay: DayKey | null }>;
+  completedAt: string | null;
+  sortOrder: number;
+  /** Preparation / post-production task of an event. */
+  linkedEventId: ID | null;
+  linkRole: 'prep' | 'post' | null;
+}
 
 export type WeekStart = 0 | 1 | 6;
 export type TimeFormat = '24h' | '12h';
