@@ -35,14 +35,14 @@ interface Ctx {
 export function shiftDays<T extends EventContent>(e: T, days: number): T {
   if (days === 0) return e;
   if (e.allDay) return { ...e, start: addDays(e.start, days), end: addDays(e.end, days) };
-  const s = instantToWall(e.start, e.timeZone);
-  const start = wallToInstant(addDays(s.day, days), s.minutes, e.timeZone);
+  const s = instantToWall(e.start, (e.timeZone as string));
+  const start = wallToInstant(addDays(s.day, days), s.minutes, (e.timeZone as string));
   const end = new Date(Date.parse(start) + (Date.parse(e.end) - Date.parse(e.start))).toISOString();
   return { ...e, start, end };
 }
 
 function contentDay(e: EventContent): DayKey {
-  return e.allDay ? e.start : instantToWall(e.start, e.timeZone).day;
+  return e.allDay ? e.start : instantToWall(e.start, (e.timeZone as string)).day;
 }
 
 /** Move weekly weekdays along with a day shift. */
