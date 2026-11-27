@@ -17,6 +17,19 @@ import { DEFAULT_TIME_ZONE, todayKey } from '@/core/time/zone';
 import { recordStorage } from './storage';
 import { KEY, SCHEMA_VERSION } from './storage-types';
 
+/** Settings shared across devices; locale, theme and time zone stay per device. */
+export const SYNCED_SETTINGS = [
+  'weekStart',
+  'timeFormat',
+  'workStart',
+  'workEnd',
+  'showWeekends',
+  'showLunar',
+  'showHolidays',
+  'defaultView',
+  'defaultDurationMin',
+] as const;
+
 export const DEFAULT_SETTINGS: Settings = {
   locale: 'vi',
   theme: 'light',
@@ -106,7 +119,7 @@ interface DataState {
 
   undo(): string | null;
   /** Apply records received from sync: no undo entry, `updatedAt` untouched. */
-  applyRemote(changes: { calendars?: Calendar[]; events?: CalendarEvent[]; tasks?: Task[] }): void;
+  applyRemote(changes: { calendars?: Calendar[]; events?: CalendarEvent[]; tasks?: Task[]; settings?: Record<string, unknown> }): void;
   exportBackup(): BackupFile;
   importBackup(text: string): MergeResult['stats'];
 }
@@ -248,6 +261,7 @@ export const useData = create<DataState>((set, get) => {
 
     updateSettings(patch) {
       const settings = { ...get().settings, ...patch };
+      if (Object.keys(patch).some((k) => (SYNCED_SETTINGS as readonly string[]).includes(k))) settings.updatedAt = nowIso();
       set({ settings });
       persist([[KEY.settings, settings]], []);
     },
@@ -594,8 +608,15 @@ export const useData = create<DataState>((set, get) => {
         next.tasks[t.id] = t;
         puts.push([KEY.task(t.id), t]);
       }
+      let settings = s.settings;
+      if (changes.settings) {
+        const patch: Record<string, unknown> = { updatedAt: changes.settings.updatedAt };
+        for (const k of SYNCED_SETTINGS) if (k in changes.settings) patch[k] = changes.settings[k];
+        settings = { ...s.settings, ...patch } as Settings;
+        puts.push([KEY.settings, settings]);
+      }
       if (!puts.length) return;
-      set(next);
+      set({ ...next, settings });
       persist(puts, []);
     },
 

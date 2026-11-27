@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 
 import { emptyMeta, type Kind, type Rec, runSync, type Snapshot, type SyncMeta } from '@/core/sync/engine';
-import { useData } from '@/data/store';
+import { SYNCED_SETTINGS, useData } from '@/data/store';
 import { recordStorage } from '@/data/storage';
 
 import { remote, supabase, syncConfigured } from './supabase';
@@ -34,7 +34,13 @@ let again = false;
 
 function snapshot(): Snapshot {
   const s = useData.getState();
-  return { calendar: s.calendars, event: s.events, task: s.tasks } as unknown as Snapshot;
+  const settings: Record<string, Rec> = {};
+  if (s.settings.updatedAt) {
+    const rec: Rec = { id: 'main', updatedAt: s.settings.updatedAt, deletedAt: null };
+    for (const k of SYNCED_SETTINGS) rec[k] = s.settings[k];
+    settings.main = rec;
+  }
+  return { calendar: s.calendars, event: s.events, task: s.tasks, settings } as unknown as Snapshot;
 }
 
 function apply(ch: Partial<Record<Kind, Rec[]>>) {
@@ -42,6 +48,7 @@ function apply(ch: Partial<Record<Kind, Rec[]>>) {
     calendars: ch.calendar as never,
     events: ch.event as never,
     tasks: ch.task as never,
+    settings: ch.settings?.[ch.settings.length - 1],
   });
 }
 
@@ -106,7 +113,7 @@ export const useSync = create<SyncState>((set, get) => {
 
       // Sync soon after local edits, when the tab regains focus, when the network returns, and periodically.
       useData.subscribe((s, prev) => {
-        if (s.events !== prev.events || s.tasks !== prev.tasks || s.calendars !== prev.calendars) schedule(3000);
+        if (s.events !== prev.events || s.tasks !== prev.tasks || s.calendars !== prev.calendars || s.settings !== prev.settings) schedule(3000);
       });
       if (typeof window !== 'undefined' && window.addEventListener) {
         window.addEventListener('online', () => schedule(500));
@@ -136,3 +143,23 @@ export const useSync = create<SyncState>((set, get) => {
     },
   };
 });
+
+export interface VersionRow {
+  rev: number;
+  savedAt: string;
+  data: Rec;
+}
+
+/** Saved versions of one record from the server (newest first). Needs a signed-in session. */
+export async function fetchVersions(kind: Kind, id: string): Promise<VersionRow[]> {
+  if (!supabase || useSync.getState().status === 'signedOut' || useSync.getState().status === 'off') return [];
+  const { data, error } = await supabase
+    .from('record_versions')
+    .select('rev,saved_at,data')
+    .eq('kind', kind)
+    .eq('id', id)
+    .order('rev', { ascending: false })
+    .limit(20);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({ rev: r.rev as number, savedAt: r.saved_at as string, data: r.data as Rec }));
+}

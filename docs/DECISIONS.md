@@ -71,3 +71,8 @@ Bỏ panel chi tiết cố định bên phải: chi tiết sự kiện/công vi�
 
 ## ADR-018 · Đồng bộ nguồn ngoài một chiều (27/11/2026) — yêu cầu của chủ sản phẩm
 Đảo quyết định "không tích hợp Google Calendar": cho phép kéo dữ liệu từ Google Calendar/Tasks và nền tảng khác vào Luma, **một chiều**. Thứ tự: ICS nhập file (xong) → link ICS đăng ký → Google OAuth (token ở Supabase Edge Function). Id sự kiện nhập từ ICS sinh từ UID nên nhập lại là cập nhật. RRULE ngoài tập hỗ trợ được nhập xấp xỉ và báo số lượng.
+
+## ADR-019 · Cài đặt đồng bộ theo từng trường, sao lưu tự động, proxy ICS (27/11/2026)
+- Chỉ đồng bộ các cài đặt dùng chung (SYNCED_SETTINGS); ngôn ngữ, giao diện, múi giờ là của từng máy. Bản ghi `settings/main`, hợp nhất 3 chiều như dữ liệu khác.
+- Sao lưu tự động: 1 bản/ngày, giữ 7, lưu cạnh dữ liệu (khóa `backup:`); khôi phục = hợp nhất theo updatedAt.
+- `ics-proxy` (verify_jwt bật): chỉ https, chặn host nội bộ/IP riêng, không theo chuyển hướng, tối đa 5 MB, 10 giây.

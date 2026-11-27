@@ -3,6 +3,11 @@
 ## [Chưa phát hành] – phản hồi sau M2
 
 ### Thêm
+- **Sao lưu tự động** mỗi ngày trên máy (giữ 7 bản), khôi phục hoặc tải về trong Cài đặt.
+- **PWA:** cài như app (manifest, icon), mở được khi mất mạng (service worker, chỉ bật khi chạy trên tên miền thật).
+- **Đồng bộ cài đặt** giữa các máy (tuần bắt đầu, giờ làm việc, kiểu giờ, mặc định xem…; ngôn ngữ, giao diện, múi giờ giữ riêng từng máy).
+- **Lịch sử phiên bản** của sự kiện (từ máy chủ) kèm khôi phục, trong hộp chỉnh sửa khi đã đăng nhập.
+- **Đăng ký lịch từ link ICS/webcal** (một chiều, tự cập nhật mỗi 6 giờ); Edge Function `ics-proxy` làm trung gian khi trình duyệt chặn CORS.
 - Giao diện mặc định **Sáng** (không còn tối theo hệ thống); nút đổi nhanh Sáng/Tối ở thanh bên.
 - Nhập lịch từ file .ics (Cài đặt → Dữ liệu): sự kiện cả ngày/có giờ/múi giờ, lặp lại, ngoại lệ, nhắc; nhập lại không trùng.
 - **Giao diện thao tác mới:** mỗi việc là một nút (bấm để mở chi tiết); rê vào ngày hiện dấu + lớn giữa ô, bấm chỗ bất kỳ trong ô để tạo việc; rê vào việc hiện X xóa (có hộp xác nhận). Chi tiết mở dạng hộp pop-up giữa màn hình, không còn cột cố định bên phải.

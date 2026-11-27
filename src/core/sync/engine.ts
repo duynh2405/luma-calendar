@@ -8,7 +8,7 @@
  */
 import { mergeRecords, sameRecord } from './merge';
 
-export type Kind = 'calendar' | 'event' | 'task';
+export type Kind = 'calendar' | 'event' | 'task' | 'settings';
 export interface Rec {
   id: string;
   updatedAt: string;
@@ -57,7 +57,7 @@ export interface SyncReport {
 }
 
 const keyOf = (kind: Kind, id: string) => `${kind}:${id}`;
-const KINDS: Kind[] = ['calendar', 'event', 'task'];
+const KINDS: Kind[] = ['calendar', 'event', 'task', 'settings'];
 const BATCH = 200;
 
 export async function runSync(deps: SyncDeps, meta: SyncMeta): Promise<SyncReport> {

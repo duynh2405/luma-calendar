@@ -16,6 +16,8 @@ import { space, useTheme } from '@/ui/theme';
 import { safely } from '../calendar/actions';
 import { Toast } from '../calendar/Toast';
 import { AccountPanel } from './AccountPanel';
+import { BackupPanel } from './BackupPanel';
+import { FeedsPanel } from './FeedsPanel';
 import { importIcsText } from './ics-import';
 import { useUi } from '../calendar/ui-store';
 
@@ -212,6 +214,14 @@ export function SettingsScreen() {
             <Button label={T('importJson')} onPress={doImport} />
             <Button label={s.locale === 'vi' ? 'Nhập lịch .ics (Google, Apple, Outlook…)' : 'Import .ics'} onPress={doImportIcs} />
           </View>
+        </Section>
+
+        <Section title={s.locale === 'vi' ? 'Đăng ký lịch từ link (ICS)' : 'Calendar subscriptions (ICS)'}>
+          <FeedsPanel />
+        </Section>
+
+        <Section title={s.locale === 'vi' ? 'Sao lưu tự động' : 'Automatic backups'}>
+          <BackupPanel />
         </Section>
 
         <Section title={T('shortcuts')}>

@@ -19,6 +19,7 @@ import { Button, Field, IconButton, Toggle, Txt } from '@/ui/primitives';
 import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
 import { contentOf, isGeneratedOccurrence, requestDelete, safely, toggleInstanceDone } from './actions';
+import { VersionHistory } from './VersionHistory';
 import { describeRecurrence, RecurrencePicker } from './RecurrencePicker';
 import { eventTimeLabel, useCalendarData } from './shared';
 import { type EditorState, useUi } from './ui-store';
@@ -320,6 +321,7 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
           multiline
           maxLength={10000}
         />
+        {existing && !occurrence ? <VersionHistory event={existing} /> : null}
       </ScrollView>
 
       <View style={[styles.footer, { borderTopColor: t.border }]}>

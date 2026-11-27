@@ -120,6 +120,8 @@ export type Locale = 'vi' | 'en';
 export type ViewMode = 'day' | '3day' | 'week' | 'month' | 'agenda';
 
 export interface Settings {
+  /** Last time a synced setting changed (settings sync, last-writer-wins per field). */
+  updatedAt?: string;
   locale: Locale;
   theme: ThemePref;
   timeZone: string;

@@ -45,7 +45,7 @@ class FakeServer implements Remote {
 }
 
 class Device {
-  data: Snapshot = { calendar: {}, event: {}, task: {} };
+  data: Snapshot = { calendar: {}, event: {}, task: {}, settings: {} };
   meta: SyncMeta = emptyMeta();
   constructor(public server: FakeServer) {}
   put(kind: Kind, r: Rec) {
@@ -159,5 +159,18 @@ describe('sync engine', () => {
     a.put('event', { ...a.data.event.e1, title: 'Sửa', updatedAt: '2026-11-27T07:00:00.000Z' });
     await a.sync();
     expect(s.rows.get('event:e1')?.data.title).toBe('Sửa');
+  });
+  it('settings sync between devices (one record "main")', async () => {
+    const s = new FakeServer();
+    const a = new Device(s);
+    const b = new Device(s);
+    a.put('settings', { id: 'main', updatedAt: '2026-11-27T08:00:00.000Z', weekStart: 0, workStart: 300 });
+    await a.sync();
+    await b.sync();
+    expect(b.data.settings.main.weekStart).toBe(0);
+    b.put('settings', { ...b.data.settings.main, workStart: 360, updatedAt: '2026-11-27T09:00:00.000Z' });
+    await b.sync();
+    await a.sync();
+    expect(a.data.settings.main).toMatchObject({ weekStart: 0, workStart: 360 });
   });
 });

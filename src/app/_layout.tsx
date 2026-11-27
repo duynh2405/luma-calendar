@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { runAutoBackup } from '@/data/autobackup';
+import { startFeedRefresh } from '@/data/icsfeeds';
 import { useSync } from '@/sync/service';
 import { useData } from '@/data/store';
 import { useTheme } from '@/ui/theme';
@@ -32,7 +34,11 @@ export default function RootLayout() {
     void useData
       .getState()
       .init()
-      .then(() => useSync.getState().start());
+      .then(() => {
+        void runAutoBackup();
+        startFeedRefresh();
+        return useSync.getState().start();
+      });
   }, []);
 
   useEffect(() => {
