@@ -103,6 +103,54 @@ describe('store', () => {
     expect(Object.keys(useData.getState().events)).toHaveLength(1);
   });
 
+  it('tasks: create, complete, recurring task advances, delete with subtasks, undo', () => {
+    const s = useData.getState();
+    const id = s.createTask({ title: 'Dựng video', dueDay: '2026-11-30' });
+    const sub = useData.getState().createTask({ title: 'Chọn nhạc', parentId: id });
+    useData.getState().toggleTaskDone(id);
+    expect(useData.getState().tasks[id].status).toBe('done');
+    useData.getState().toggleTaskDone(id);
+    expect(useData.getState().tasks[id].status).toBe('todo');
+
+    const rec = useData.getState().createTask({
+      title: 'Báo cáo tuần',
+      dueDay: '2026-11-27',
+      recurrence: { freq: 'weekly', interval: 1 },
+    });
+    useData.getState().toggleTaskDone(rec);
+    const r = useData.getState().tasks[rec];
+    expect(r.status).toBe('todo');
+    expect(r.dueDay! > '2026-11-27').toBe(true);
+    expect(r.completions).toHaveLength(1);
+
+    useData.getState().deleteTask(id);
+    expect(useData.getState().tasks[sub].deletedAt).not.toBeNull();
+    useData.getState().undo();
+    expect(useData.getState().tasks[sub].deletedAt).toBeNull();
+    expect(() => useData.getState().createTask({ title: ' ' })).toThrow();
+  });
+
+  it('recurring events: delete one occurrence, edit following, delete override keeps it gone', () => {
+    const calId = Object.keys(useData.getState().calendars)[0];
+    const id = useData.getState().createEvent({ ...timed(calId), recurrence: { freq: 'daily', interval: 1 } });
+    useData.getState().deleteOccurrence({ masterId: id, occurrenceDay: '2026-11-29' }, 'this');
+    expect(useData.getState().events[id].exdates).toEqual(['2026-11-29']);
+
+    const { id: _i, createdAt: _c, updatedAt: _u, deletedAt: _d, recurrence: _r, exdates: _x, ...content } = useData.getState().events[id];
+    useData.getState().updateOccurrence({ masterId: id, occurrenceDay: '2026-11-30' }, 'this', { ...content, title: 'Đổi' });
+    const override = Object.values(useData.getState().events).find((e) => e.recurrenceMasterId === id)!;
+    expect(override.recurrenceDay).toBe('2026-11-30');
+    useData.getState().deleteEvent(override.id);
+    expect(useData.getState().events[id].exdates).toEqual(['2026-11-29', '2026-11-30']);
+  });
+
+  it('scheduleTask creates a linked time block and keeps the due date', () => {
+    const t = useData.getState().createTask({ title: 'Sửa ảnh', dueDay: '2026-12-01' });
+    const e = useData.getState().scheduleTask(t, '2026-11-28T02:00:00.000Z', '2026-11-28T04:00:00.000Z', 'Asia/Ho_Chi_Minh');
+    expect(useData.getState().events[e!].taskId).toBe(t);
+    expect(useData.getState().tasks[t].dueDay).toBe('2026-12-01');
+  });
+
   it('purge only removes trashed events', () => {
     const s = useData.getState();
     const calId = Object.keys(s.calendars)[0];

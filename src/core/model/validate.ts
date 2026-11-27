@@ -1,4 +1,4 @@
-import type { Calendar, CalendarEvent } from './types';
+import type { Calendar, CalendarEvent, Task } from './types';
 
 export const LIMITS = {
   calendarName: 60,
@@ -37,6 +37,16 @@ export function validateEvent(e: CalendarEvent): ValidationError[] {
     if (Number.isNaN(s) || Number.isNaN(en)) errors.push('invalid-date');
     else if (en <= s) errors.push('end-before-start');
   }
+  return errors;
+}
+
+export function validateTask(t: Task): ValidationError[] {
+  const errors: ValidationError[] = [];
+  if (!t.title.trim()) errors.push('title-required');
+  if (t.title.length > LIMITS.title) errors.push('title-too-long');
+  if (t.notes.length > LIMITS.description) errors.push('description-too-long');
+  if ((t.dueDay && !DAY_RE.test(t.dueDay)) || (t.startDay && !DAY_RE.test(t.startDay))) errors.push('invalid-date');
+  else if (t.startDay && t.dueDay && t.dueDay < t.startDay) errors.push('end-before-start');
   return errors;
 }
 
