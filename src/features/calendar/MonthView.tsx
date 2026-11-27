@@ -192,7 +192,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                         <View style={{ flex: 1 }} />
                       )}
                       {settings.showLunar ? (
-                        <Txt size="xs" color={info.isLunarMarker ? 'holiday' : 'textFaint'} tabular>
+                        <Txt size="xs" color={info.isLunarMarker ? 'holiday' : 'lunar'} tabular>
                           {lunarCellLabel(info.lunar)}
                         </Txt>
                       ) : null}

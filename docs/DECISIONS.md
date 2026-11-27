@@ -48,3 +48,8 @@ Tránh hai màn cùng mount (phím tắt và hộp thoại chạy hai lần). C�
 
 ## ADR-013 · Công việc chỉnh sửa là lưu ngay
 Mỗi thay đổi trong panel công việc được lưu tức thì (có Undo), giống Todoist/TickTick; sự kiện vẫn dùng nút Lưu.
+
+## ADR-014 · Giao diện "đơn giản, sang, nhẹ" (27/11/2026) — theo yêu cầu chủ sản phẩm
+Nền trắng ngà / xám ấm thay cho xám lạnh, chữ mực ấm, màu nhấn xanh chàm dịu. Ngày dương = chữ đậm màu chính;
+ngày âm = vàng đồng (token `lunar`), mùng 1/rằm và ngày lễ = đỏ gạch (`holiday`). Bo góc lớn hơn (5/8/12).
+Giờ làm việc mặc định 5h–23h (cài đặt cũ 8–18 chưa đổi sẽ tự chuyển).

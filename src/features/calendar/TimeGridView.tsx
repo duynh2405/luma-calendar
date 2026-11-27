@@ -236,7 +236,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                 </Txt>
               </View>
               {settings.showLunar ? (
-                <Txt size="xs" color={info.isLunarMarker ? 'holiday' : 'textFaint'} tabular>
+                <Txt size="xs" color={info.isLunarMarker ? 'holiday' : 'lunar'} tabular>
                   {lunarCellLabel(info.lunar)}
                 </Txt>
               ) : null}

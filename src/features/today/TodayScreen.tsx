@@ -244,7 +244,7 @@ function TodayContent() {
                   {weekdayShort(locale, d)} {Number(d.slice(8))}/{Number(d.slice(5, 7))}
                 </Txt>
                 {settings.showLunar ? (
-                  <Txt size="xs" color={di.isLunarMarker ? 'holiday' : 'textFaint'}>
+                  <Txt size="xs" color={di.isLunarMarker ? 'holiday' : 'lunar'}>
                     {di.lunar.day}/{di.lunar.month}
                     {di.lunar.leap ? 'N' : ''}
                   </Txt>

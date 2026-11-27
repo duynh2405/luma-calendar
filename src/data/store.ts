@@ -23,8 +23,8 @@ export const DEFAULT_SETTINGS: Settings = {
   timeZone: DEFAULT_TIME_ZONE,
   weekStart: 1,
   timeFormat: '24h',
-  workStart: 8 * 60,
-  workEnd: 18 * 60,
+  workStart: 5 * 60,
+  workEnd: 23 * 60,
   showWeekends: true,
   showLunar: true,
   showHolidays: true,
@@ -217,6 +217,11 @@ export const useData = create<DataState>((set, get) => {
         if (table) (data[table] as Record<string, unknown>)[id] = v;
       }
       const settings = { ...DEFAULT_SETTINGS, ...((raw[KEY.settings] as Partial<Settings>) ?? {}) };
+      // The old default work hours (8–18) become the new default (5–23) unless the owner changed them.
+      if (settings.workStart === 8 * 60 && settings.workEnd === 18 * 60) {
+        settings.workStart = DEFAULT_SETTINGS.workStart;
+        settings.workEnd = DEFAULT_SETTINGS.workEnd;
+      }
       set({ ...data, settings, loaded: true });
 
       const meta = raw[KEY.meta] as { schema?: number; createdAt?: string } | undefined;
