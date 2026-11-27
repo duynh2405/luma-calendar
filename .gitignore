@@ -44,3 +44,6 @@ example
 
 # Claude local settings
 .claude/settings.local.json
+
+# local env (public keys only, but keep per-machine)
+.env

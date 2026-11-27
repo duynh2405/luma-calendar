@@ -148,3 +148,12 @@ describe('recurrence, calendar, priority', () => {
     expect(p('gửi tài liệu cho khách').location).toBe('');
   });
 });
+
+describe('spoken forms', () => {
+  const o = { today: '2026-11-27' };
+  it('understands "3 giờ chiều" and "3 giờ rưỡi chiều"', () => {
+    expect(parseQuickAdd('họp khách mai 3 giờ chiều', o).startMin).toBe(15 * 60);
+    expect(parseQuickAdd('họp khách mai 3 giờ rưỡi chiều', o).startMin).toBe(15 * 60 + 30);
+    expect(parseQuickAdd('chốt kèo 9 giờ sáng', o).startMin).toBe(9 * 60);
+  });
+});

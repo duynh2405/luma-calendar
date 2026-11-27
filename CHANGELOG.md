@@ -3,6 +3,9 @@
 ## [Chưa phát hành] – phản hồi sau M2
 
 ### Thêm
+- Khối chi tiết ngày ở cột trái: tab Dương lịch (thứ, ngày trong năm, tuần) và Âm lịch (ngày/tháng/năm âm, Can Chi ngày-tháng-năm, tháng đủ/thiếu), kèm lễ và lịch trong ngày.
+- Nhập task bằng giọng nói (web): nói theo mẫu "Việc …, hạn …, ưu tiên …, danh mục …, nhắc trước …" → app điền sẵn để bạn lưu. Parser hiểu thêm "3 giờ chiều", "3 giờ rưỡi".
+- M3 (đang làm): đồng bộ Supabase — schema + RLS đã áp dụng, engine đồng bộ + hợp nhất theo trường, đăng nhập bằng mã email trong Cài đặt.
 - Giao diện mới: bảng màu ấm, dịu; ngày âm màu vàng đồng, tách khỏi ngày dương. Giờ làm việc mặc định 5h–23h.
 - Nút **Xong việc** cho sự kiện (trong form sửa và dấu tick ở màn Hôm nay): sự kiện bị gạch ngang và mờ trên mọi chế độ xem; bấm lại để bỏ đánh dấu. Với sự kiện lặp, chỉ đánh dấu đúng lần đó.
 - Ngày đang chọn được tô sáng (viền + nền) ở lưới Tháng, cột Tuần/3 ngày và lịch nhỏ; bấm ô ngày trống cũng chọn ngày đó.

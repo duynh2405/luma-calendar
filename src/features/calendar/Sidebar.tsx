@@ -11,6 +11,7 @@ import { Button, Divider, HoverPressable, IconButton, Txt } from '@/ui/primitive
 import { radius, space, useTheme } from '@/ui/theme';
 
 import { createEventNow, goTo, navItems, type Section } from '../shell/nav';
+import { DayDetail } from './DayDetail';
 import { MiniMonth } from './MiniMonth';
 import { webProps } from './shared';
 import { useUi } from './ui-store';
@@ -77,6 +78,7 @@ export function Sidebar({ active: section, onNavigate }: { active: Section; onNa
           }}
         />
       ) : null}
+      {cursor ? <DayDetail day={cursor} /> : null}
 
       <View style={{ gap: 2 }}>
         <View style={styles.sectionHeader}>

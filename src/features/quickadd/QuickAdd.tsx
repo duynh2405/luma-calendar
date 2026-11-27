@@ -2,11 +2,12 @@
  * Quick add bar: type a Vietnamese sentence, see what was understood as chips,
  * press Enter to save. Ambiguous guesses need a second Enter.
  */
-import { AlertTriangle, Bell, CalendarDays, Clock, Flag, MapPin, Repeat, Tag, Zap } from 'lucide-react-native';
+import { AlertTriangle, Bell, CalendarDays, Clock, Flag, MapPin, Mic, Repeat, Square, Tag, Zap } from 'lucide-react-native';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { parseQuickAdd } from '@/core/nlp/quickadd';
+import { applyVoiceFormula } from '@/core/nlp/voice';
 import type { CalendarEvent } from '@/core/model/types';
 import { addDays } from '@/core/time/days';
 import { formatMinutes, todayKey, wallToInstant } from '@/core/time/zone';
@@ -18,6 +19,7 @@ import { font, radius, text, useTheme, withAlpha } from '@/ui/theme';
 
 import { safely } from '../calendar/actions';
 import { describeRecurrence } from '../calendar/RecurrencePicker';
+import { useVoice } from './useVoice';
 
 export function QuickAdd({ autoFocus, onCreated }: { autoFocus?: boolean; onCreated?: (kind: 'event' | 'task', id: string) => void }) {
   const t = useTheme();
@@ -31,15 +33,16 @@ export function QuickAdd({ autoFocus, onCreated }: { autoFocus?: boolean; onCrea
   const cals = activeCalendars(calendars);
   const today = todayKey(settings.timeZone);
 
-  const parsed = useMemo(
-    () =>
-      input.trim()
-        ? parseQuickAdd(input, { today, defaultDurationMin: settings.defaultDurationMin, calendars: cals.map((c) => ({ id: c.id, name: c.name })) })
-        : null,
+  const voice = useVoice();
+  const { parsed, forceTask } = useMemo(() => {
+    if (!input.trim()) return { parsed: null, forceTask: false };
+    const calList = cals.map((c) => ({ id: c.id, name: c.name }));
+    // The spoken formula ("Việc …, hạn …, ưu tiên …, danh mục …") is translated first; typed text passes through unchanged.
+    const v = applyVoiceFormula(input, calList);
+    return { parsed: parseQuickAdd(v.text, { today, defaultDurationMin: settings.defaultDurationMin, calendars: calList }), forceTask: v.forceTask };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [input, today, settings.defaultDurationMin, calendars],
-  );
-  const kind = kindOverride ?? parsed?.kind ?? 'task';
+  }, [input, today, settings.defaultDurationMin, calendars]);
+  const kind = kindOverride ?? (forceTask ? 'task' : parsed?.kind) ?? 'task';
 
   function reset() {
     setInput('');
@@ -156,7 +159,37 @@ export function QuickAdd({ autoFocus, onCreated }: { autoFocus?: boolean; onCrea
           accessibilityLabel={T('quickAddPlaceholder')}
           style={[styles.input, { color: t.text }, Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)]}
         />
+        {voice.supported ? (
+          <Pressable
+            onPress={() => {
+              if (voice.listening) voice.stop();
+              else {
+                reset();
+                voice.start((text) => {
+                  setInput(text);
+                  setConfirming(false);
+                });
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={locale === 'vi' ? 'Nhập bằng giọng nói' : 'Voice input'}
+            style={[styles.mic, { backgroundColor: voice.listening ? t.danger : t.accentSoft }]}
+          >
+            {voice.listening ? <Square size={12} color="#fff" fill="#fff" /> : <Mic size={16} color={t.accent} strokeWidth={2} />}
+          </Pressable>
+        ) : null}
       </View>
+      {voice.listening || voice.error ? (
+        <Txt size="xs" color={voice.error ? 'danger' : 'textMuted'}>
+          {voice.error
+            ? locale === 'vi'
+              ? voice.error === 'not-allowed' ? 'Chưa cho phép micro cho trang này.' : voice.error === 'no-speech' ? 'Không nghe thấy gì, thử lại nhé.' : `Lỗi giọng nói: ${voice.error}`
+              : `Voice error: ${voice.error}`
+            : locale === 'vi'
+              ? 'Đang nghe… nói theo mẫu: "Việc [tên], hạn [ngày giờ], ưu tiên [cao/vừa/thấp], danh mục [tên], nhắc trước [1 ngày]"'
+              : 'Listening… "Task [name], due [date time], priority [high/medium/low], calendar [name], remind [1 day] before"'}
+        </Txt>
+      ) : null}
       {parsed ? (
         <View style={styles.preview}>
           <Segmented
@@ -209,5 +242,6 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: { flex: 1, fontFamily: font.regular, fontSize: text.lg, minHeight: 32 },
   preview: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  mic: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.sm, paddingHorizontal: 6, height: 22 },
 });

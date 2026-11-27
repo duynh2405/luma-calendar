@@ -206,21 +206,22 @@ export function parseQuickAdd(input: string, opts: QuickAddOptions): QuickAddRes
   });
 
   // --- times: ranges first, then single ----------------------------------------------------
-  const T = `(\\d{1,2})(?:(h|g|gio|:)(\\d{2})?)?(?: ?(?:p|phut))?`;
+  // "gio" may be spoken with a space ("3 giờ chiều"); "ruoi" = half past ("3 giờ rưỡi").
+  const T = `(\\d{1,2})(?:(h|g| ?gio|:)(\\d{2}| ?ruoi)?)?(?: ?(?:p|phut))?`;
   scan(re(`(?:${W}(?:tu|luc|vao) )?${W}${T}(?: ${PART})? ?(?:den|toi|-|–) ?${T}(?: ${PART})?${E}`), (m) => {
     const [, h1, mk1, mi1, p1, h2, mk2, mi2, p2] = m;
     if (!mk1 && !mk2 && !p1 && !p2) return null; // "8-12" without any time marker
     const pEnd = p2 ?? p1 ?? dayPart;
-    const s = toMinutes(Number(h1), Number(mi1 ?? 0), p1 ?? p2 ?? dayPart, ambiguous);
-    const e = toMinutes(Number(h2), Number(mi2 ?? 0), pEnd, ambiguous);
+    const s = toMinutes(Number(h1), mi1?.trim() === 'ruoi' ? 30 : Number(mi1 ?? 0), p1 ?? p2 ?? dayPart, ambiguous);
+    const e = toMinutes(Number(h2), mi2?.trim() === 'ruoi' ? 30 : Number(mi2 ?? 0), pEnd, ambiguous);
     if (s === null || e === null) return null;
     startMin = s;
     endMin = e > s ? e : e + 720 > s && e + 720 < 1440 ? e + 720 : e;
     return 'time';
   });
-  scan(re(`(?:${W}(?:luc|vao) )?${W}(\\d{1,2})(h|g|gio|:)(\\d{2})?(?: ?(?:p|phut))?(?: ${PART})?${E}`), (m) => {
+  scan(re(`(?:${W}(?:luc|vao) )?${W}(\\d{1,2})(h|g| ?gio|:)(\\d{2}| ?ruoi)?(?: ?(?:p|phut))?(?: ${PART})?${E}`), (m) => {
     if (startMin !== null) return null;
-    const s = toMinutes(Number(m[1]), Number(m[3] ?? 0), m[4] ?? dayPart, ambiguous);
+    const s = toMinutes(Number(m[1]), m[3]?.trim() === 'ruoi' ? 30 : Number(m[3] ?? 0), m[4] ?? dayPart, ambiguous);
     if (s === null) return null;
     startMin = s;
     return 'time';

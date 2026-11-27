@@ -53,3 +53,15 @@ Mỗi thay đổi trong panel công việc được lưu tức thì (có Undo), 
 Nền trắng ngà / xám ấm thay cho xám lạnh, chữ mực ấm, màu nhấn xanh chàm dịu. Ngày dương = chữ đậm màu chính;
 ngày âm = vàng đồng (token `lunar`), mùng 1/rằm và ngày lễ = đỏ gạch (`holiday`). Bo góc lớn hơn (5/8/12).
 Giờ làm việc mặc định 5h–23h (cài đặt cũ 8–18 chưa đổi sẽ tự chuyển).
+
+## ADR-015 · Đồng bộ (M3): Supabase Free, ghi qua RPC, hợp nhất theo từng trường (27/11/2026) — duyệt bởi chủ sản phẩm
+- Project `luma-calendar`, Supabase Free, Singapore (`ap-southeast-1`). Postgres thuần + RLS; chỉ phụ thuộc `auth.uid()`.
+- Bảng `records(user_id, kind, id, data jsonb, rev, server_seq)` + `record_versions` (mọi lần ghi được giữ → khôi phục). Không có policy ghi trực tiếp; ghi qua `push_records()` (security definer, luôn lọc theo `auth.uid()`), kiểm tra `rev` (optimistic concurrency).
+- Client lưu "bản cuối cùng hai bên đã thống nhất" (`base`) cho mỗi bản ghi. Xung đột → hợp nhất ba bên theo từng trường: trường nào chỉ một bên sửa thì lấy; cả hai sửa khác nhau thì bên có `updatedAt` mới hơn thắng. Xóa là xóa mềm nên đi chung đường này.
+- Đăng nhập bằng mã một lần qua email (không lưu mật khẩu). Google OAuth cần chủ sản phẩm tạo OAuth client → làm sau.
+- Giới hạn đã biết: `server_seq` cấp từ sequence nên hai giao dịch gần như đồng thời có thể commit lệch thứ tự (có thể bỏ sót một bản ghi ở lần pull sau với nhiều người dùng đồng thời; một người dùng thì không ảnh hưởng). Khi thương mại hóa cần đổi sang cơ chế cursor an toàn hơn.
+- Settings (giao diện, ngôn ngữ…) chưa đồng bộ vì có phần riêng từng thiết bị.
+
+## ADR-016 · Nhập task bằng giọng nói (27/11/2026) — yêu cầu của chủ sản phẩm
+Web dùng SpeechRecognition của trình duyệt (vi-VN, miễn phí, không gửi qua máy chủ của mình). Công thức nói:
+"Việc [tên], hạn [ngày giờ], ưu tiên [cao/vừa/thấp], danh mục [tên lịch], nhắc trước [1 ngày]" — `core/nlp/voice.ts` đổi từ khóa thành cú pháp parser đã có (`!3`, `#media`), phần ngày giờ do parser đọc. Kết quả chỉ **điền sẵn** để người dùng xem chip rồi Enter lưu. Android/iOS: M4 (expo-speech-recognition).

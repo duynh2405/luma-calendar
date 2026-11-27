@@ -15,6 +15,7 @@ import { space, useTheme } from '@/ui/theme';
 
 import { safely } from '../calendar/actions';
 import { Toast } from '../calendar/Toast';
+import { AccountPanel } from './AccountPanel';
 import { useUi } from '../calendar/ui-store';
 
 const toHHMM = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -174,6 +175,10 @@ export function SettingsScreen() {
           <Toggle label={T('showWeekends')} value={s.showWeekends} onChange={(showWeekends) => set({ showWeekends })} />
           <Toggle label={T('showLunar')} value={s.showLunar} onChange={(showLunar) => set({ showLunar })} />
           <Toggle label={T('showHolidays')} value={s.showHolidays} onChange={(showHolidays) => set({ showHolidays })} />
+        </Section>
+
+        <Section title={s.locale === 'vi' ? 'Tài khoản & đồng bộ' : 'Account & sync'}>
+          <AccountPanel />
         </Section>
 
         <Section title={T('data')}>

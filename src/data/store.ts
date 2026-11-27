@@ -105,6 +105,8 @@ interface DataState {
   scheduleTask(id: ID, start: string, end: string, timeZone: string): ID | null;
 
   undo(): string | null;
+  /** Apply records received from sync: no undo entry, `updatedAt` untouched. */
+  applyRemote(changes: { calendars?: Calendar[]; events?: CalendarEvent[]; tasks?: Task[] }): void;
   exportBackup(): BackupFile;
   importBackup(text: string): MergeResult['stats'];
 }
@@ -572,6 +574,27 @@ export const useData = create<DataState>((set, get) => {
       set({ ...next, undoStack: s.undoStack.slice(0, -1) });
       persist(puts, removes);
       return entry.label;
+    },
+
+    applyRemote(changes) {
+      const s = get();
+      const next = { calendars: { ...s.calendars }, events: { ...s.events }, tasks: { ...s.tasks } };
+      const puts: [string, unknown][] = [];
+      for (const c of changes.calendars ?? []) {
+        next.calendars[c.id] = c;
+        puts.push([KEY.calendar(c.id), c]);
+      }
+      for (const e of changes.events ?? []) {
+        next.events[e.id] = e;
+        puts.push([KEY.event(e.id), e]);
+      }
+      for (const t of changes.tasks ?? []) {
+        next.tasks[t.id] = t;
+        puts.push([KEY.task(t.id), t]);
+      }
+      if (!puts.length) return;
+      set(next);
+      persist(puts, []);
     },
 
     exportBackup() {

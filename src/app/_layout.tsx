@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useSync } from '@/sync/service';
 import { useData } from '@/data/store';
 import { useTheme } from '@/ui/theme';
 
@@ -28,7 +29,10 @@ export default function RootLayout() {
   const t = useTheme();
 
   useEffect(() => {
-    void useData.getState().init();
+    void useData
+      .getState()
+      .init()
+      .then(() => useSync.getState().start());
   }, []);
 
   useEffect(() => {
