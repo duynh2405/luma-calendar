@@ -18,7 +18,7 @@ import { CalendarIcon } from '@/ui/icons';
 import { Button, Field, IconButton, Toggle, Txt } from '@/ui/primitives';
 import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
-import { contentOf, deleteInstance, isGeneratedOccurrence, safely, toggleInstanceDone } from './actions';
+import { contentOf, isGeneratedOccurrence, requestDelete, safely, toggleInstanceDone } from './actions';
 import { describeRecurrence, RecurrencePicker } from './RecurrencePicker';
 import { eventTimeLabel, useCalendarData } from './shared';
 import { type EditorState, useUi } from './ui-store';
@@ -127,7 +127,7 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
 
   function remove() {
     if (!existing) return;
-    deleteInstance(occurrence ?? asInstance(existing), close);
+    requestDelete(occurrence ?? asInstance(existing), close);
   }
 
   function duplicate() {

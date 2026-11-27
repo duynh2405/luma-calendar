@@ -7,6 +7,8 @@ import type { EventContent } from '@/core/recurrence/edit';
 import type { EventInstance } from '@/core/recurrence/expand';
 import { addDays, addMonths, type DayKey } from '@/core/time/days';
 
+import type { DisplayEvent } from './actions';
+
 export type EditorState =
   | null
   | { mode: 'create'; draft: EventDraft; key: number }
@@ -40,6 +42,8 @@ interface UiState {
   converterOpen: boolean;
   searchOpen: boolean;
   scopePrompt: ScopePrompt | null;
+  /** An event/task waiting for the owner to confirm its deletion. */
+  confirmDelete: DisplayEvent | null;
   /** Incremented to focus the quick-add bar (FAB on Today / Tasks). */
   quickAddNonce: number;
   toast: Toast | null;
@@ -56,6 +60,7 @@ interface UiState {
   setConverter(open: boolean): void;
   setSearch(open: boolean): void;
   setScopePrompt(p: ScopePrompt | null): void;
+  setConfirmDelete(i: DisplayEvent | null): void;
   focusQuickAdd(): void;
   showToast(message: string, undo?: boolean): void;
   hideToast(): void;
@@ -74,6 +79,7 @@ export const useUi = create<UiState>((set, get) => ({
   converterOpen: false,
   searchOpen: false,
   scopePrompt: null,
+  confirmDelete: null,
   quickAddNonce: 0,
   toast: null,
 
@@ -99,6 +105,7 @@ export const useUi = create<UiState>((set, get) => ({
   setConverter: (converterOpen) => set({ converterOpen }),
   setSearch: (searchOpen) => set({ searchOpen }),
   setScopePrompt: (scopePrompt) => set({ scopePrompt }),
+  setConfirmDelete: (confirmDelete) => set({ confirmDelete }),
   focusQuickAdd: () => set({ quickAddNonce: get().quickAddNonce + 1 }),
   showToast: (message, undo) => set({ toast: { id: ++toastSeq, message, undo } }),
   hideToast: () => set({ toast: null }),

@@ -3,6 +3,7 @@
  * Mouse: click to create, drag to create a range, drag events to move,
  * drag the bottom edge to resize. Touch: tap to create / open.
  */
+import { X } from 'lucide-react-native';
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, type PointerEvent as RNPointerEvent, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -16,7 +17,7 @@ import { lunarCellLabel, useLocale, useT, weekdayShort } from '@/i18n';
 import { Txt } from '@/ui/primitives';
 import { radius, useTheme, withAlpha } from '@/ui/theme';
 
-import { changeInstanceTime, type DisplayEvent, openInstance } from './actions';
+import { changeInstanceTime, type DisplayEvent, openInstance, requestDelete } from './actions';
 import { clamp, EventBar, keyOf, newDraft, openCreate, snap, SNAP_MIN, useCalendarData, useDisplayEvents, webProps } from './shared';
 import { pointFrom, type Pt, rectOf, usePointerDrag } from './use-pointer-drag';
 import { useUi } from './ui-store';
@@ -47,6 +48,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
   const editor = useUi((s) => s.editor);
   const taskPanel = useUi((s) => s.taskPanel);
   const cursor = useUi((s) => s.cursor);
+  const [hoverBlock, setHoverBlock] = useState<string | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   // Re-render every 30 s so the "now" line moves.
   const [tick, setTick] = useState(0);
@@ -361,7 +363,8 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                       }}
                     >
                       <Pressable
-                        accessibilityRole="button"
+                        onHoverIn={() => setHoverBlock(keyOf(s.event))}
+                        onHoverOut={() => setHoverBlock((h) => (h === keyOf(s.event) ? null : h))}
                         accessibilityLabel={`${s.event.title}, ${timeText}`}
                         {...webProps({ title: `${timeText}\n${s.event.title}${s.event.location ? '\n' + s.event.location : ''}` })}
                         onPointerDown={
@@ -401,6 +404,18 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                             </Txt>
                           ) : null}
                         </Txt>
+                        {hoverBlock === keyOf(s.event) && !ghost ? (
+                          <Pressable
+                            onPress={() => requestDelete(s.event as DisplayEvent)}
+                            onPointerDown={(e: { stopPropagation: () => void }) => e.stopPropagation()}
+                            accessibilityRole="button"
+                            accessibilityLabel="Delete"
+                            hitSlop={4}
+                            style={[styles.blockX, { backgroundColor: t.bg, borderColor: t.borderStrong }]}
+                          >
+                            <X size={11} color={t.textMuted} strokeWidth={2.5} />
+                          </Pressable>
+                        ) : null}
                         {height >= 36 ? (
                           <Txt size="xs" color="textMuted" tabular numberOfLines={1}>
                             {timeText}
@@ -481,6 +496,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: 'hidden',
   },
+  blockX: { position: 'absolute', top: 3, right: 3, width: 16, height: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   resizeHandle: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
   nowLine: { position: 'absolute', left: 0, right: 0, height: 2, zIndex: 30 },
   nowDot: { position: 'absolute', left: -5, top: -4, width: 10, height: 10, borderRadius: 5 },

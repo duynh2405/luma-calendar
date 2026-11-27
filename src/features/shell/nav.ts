@@ -1,6 +1,6 @@
 /** Navigation helpers shared by the sidebar, bottom tabs and shortcuts. */
 import { router } from 'expo-router';
-import { CalendarDays, CheckSquare, type LucideIcon, Settings, Sun } from 'lucide-react-native';
+import { CalendarDays, CheckSquare, Clock, type LucideIcon, Settings } from 'lucide-react-native';
 
 import { nowWall } from '@/core/time/zone';
 import { useData } from '@/data/store';
@@ -9,17 +9,17 @@ import type { T } from '@/i18n';
 import { newDraft, openCreate } from '../calendar/shared';
 import { useUi } from '../calendar/ui-store';
 
-export type Section = 'today' | 'calendar' | 'tasks';
+export type Section = 'upcoming' | 'calendar' | 'tasks';
 
 export const SECTION_ROUTES: Record<Section, '/' | '/calendar' | '/tasks'> = {
-  today: '/',
+  upcoming: '/',
   calendar: '/calendar',
   tasks: '/tasks',
 };
 
 export function navItems(T: T): { key: Section | 'settings'; label: string; icon: LucideIcon }[] {
   return [
-    { key: 'today', label: T('todayTitle'), icon: Sun },
+    { key: 'upcoming', label: T('navUpcoming'), icon: Clock },
     { key: 'calendar', label: T('navCalendar'), icon: CalendarDays },
     { key: 'tasks', label: T('navTasks'), icon: CheckSquare },
     { key: 'settings', label: T('settings'), icon: Settings },

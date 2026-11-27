@@ -1,6 +1,7 @@
 /** Agenda / schedule: continuous list of upcoming days that have events. */
+import { X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { dayInfo } from '@/core/lunar/dayinfo';
 import { eventDayRange } from '@/core/layout/layout';
@@ -11,7 +12,7 @@ import { formatShortDate, lunarFullLabel, useLocale, useT } from '@/i18n';
 import { Button, HoverPressable, Txt } from '@/ui/primitives';
 import { useTheme } from '@/ui/theme';
 
-import { type DisplayEvent, openInstance } from './actions';
+import { type DisplayEvent, openInstance, requestDelete } from './actions';
 import { eventTimeLabel, keyOf, useCalendarData, useDisplayEvents } from './shared';
 
 const PAGE_DAYS = 60;
@@ -96,6 +97,15 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
                       </Txt>
                     ) : null}
                   </View>
+                  <Pressable
+                    onPress={() => requestDelete(e)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete"
+                    hitSlop={6}
+                    style={[styles.rowX, { borderColor: t.borderStrong }]}
+                  >
+                    <X size={12} color={t.textMuted} strokeWidth={2.25} />
+                  </Pressable>
                 </HoverPressable>
               ))}
             </View>
@@ -112,6 +122,7 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
 const styles = StyleSheet.create({
   group: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingVertical: 12, borderBottomWidth: 1 },
   dateCol: { width: 200, gap: 2 },
+  rowX: { width: 20, height: 20, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 6 },
   dot: { width: 8, height: 8, borderRadius: 4 },
 });

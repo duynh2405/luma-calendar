@@ -1,5 +1,5 @@
-import { TodayScreen } from '@/features/today/TodayScreen';
+import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 
 export default function Index() {
-  return <TodayScreen />;
+  return <UpcomingScreen />;
 }

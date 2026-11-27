@@ -3,6 +3,7 @@
  * events are bars laid out per week row (multi-day events span cells).
  * Mouse: drag an event to another day. Click empty cell → new all-day event.
  */
+import { Plus } from 'lucide-react-native';
 import { type ComponentRef, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, type PointerEvent as RNPointerEvent, StyleSheet, View } from 'react-native';
 
@@ -13,7 +14,7 @@ import { type DayKey, diffDays, isWeekend, monthGridDays, parseDayKey } from '@/
 import { todayKey } from '@/core/time/zone';
 import { lunarCellLabel, useLocale, useT, weekdayShort } from '@/i18n';
 import { Txt } from '@/ui/primitives';
-import { useTheme } from '@/ui/theme';
+import { useTheme, withAlpha } from '@/ui/theme';
 
 import { changeInstanceTime, type DisplayEvent, openInstance } from './actions';
 import { clamp, EventBar, keyOf, newDraft, openCreate, useCalendarData, useDisplayEvents } from './shared';
@@ -32,6 +33,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
   const taskPanel = useUi((s) => s.taskPanel);
   const gridRef = useRef<ComponentRef<typeof View>>(null);
   const [rowHeight, setRowHeight] = useState(100);
+  const [hoverDay, setHoverDay] = useState<DayKey | null>(null);
   const [preview, setPreview] = useState<{ event: DisplayEvent; deltaDays: number } | null>(null);
 
   const allDays = useMemo(() => monthGridDays(cursor, settings.weekStart), [cursor, settings.weekStart]);
@@ -158,6 +160,8 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                             openCreate(newDraft(d, 9 * 60, 10 * 60, true));
                           }
                     }
+                    onHoverIn={() => setHoverDay(d)}
+                    onHoverOut={() => setHoverDay((h) => (h === d ? null : h))}
                     accessibilityLabel={d}
                   >
                     <View style={styles.cellHeader}>
@@ -197,6 +201,13 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                         </Txt>
                       ) : null}
                     </View>
+                    {hoverDay === d ? (
+                      <View pointerEvents="none" style={[styles.plusWrap, { top: CELL_HEADER }]}>
+                        <View style={[styles.plus, { backgroundColor: withAlpha(t.accent, 0.14), borderColor: withAlpha(t.accent, 0.55) }]}>
+                          <Plus size={24} color={t.accent} strokeWidth={2} />
+                        </View>
+                      </View>
+                    ) : null}
                     {hiddenPerCol[c] > 0 ? (
                       <Pressable
                         style={[styles.more, { top: CELL_HEADER + lanesShown * BAR_H }]}
@@ -257,5 +268,7 @@ const styles = StyleSheet.create({
   cell: { flex: 1, borderLeftWidth: 1, minWidth: 0 },
   cellHeader: { height: CELL_HEADER, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 4 },
   dateBadge: { minWidth: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  plusWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  plus: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   more: { position: 'absolute', left: 6, height: BAR_H, justifyContent: 'center' },
 });

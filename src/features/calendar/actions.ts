@@ -118,6 +118,18 @@ export function toggleInstanceDone(i: DisplayEvent) {
   safely(() => useData.getState().updateEvent(i.id, { doneAt }, key), key);
 }
 
+/**
+ * Ask before deleting (the ✕ on a job). Occurrences of a series go straight to the scope dialog,
+ * which is itself the confirmation; everything else gets a confirm box.
+ */
+export function requestDelete(i: DisplayEvent, onDone?: () => void) {
+  if (!i.task && isGeneratedOccurrence(i)) {
+    deleteInstance(i, onDone);
+    return;
+  }
+  useUi.getState().setConfirmDelete(i);
+}
+
 /** Delete an instance (asks the scope for occurrences of a series). */
 export function deleteInstance(i: DisplayEvent, onDone?: () => void) {
   if (i.task) {

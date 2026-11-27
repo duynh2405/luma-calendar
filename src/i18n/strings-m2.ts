@@ -2,6 +2,7 @@
 export const VI_M2 = {
   navCalendar: 'Lịch',
   navTasks: 'Công việc',
+  navUpcoming: 'Công việc sắp tới',
   taskLabel: 'Công việc',
   // recurrence
   repeat: 'Lặp lại',
@@ -141,6 +142,7 @@ export const VI_M2 = {
 export const EN_M2: Record<keyof typeof VI_M2, string> = {
   navCalendar: 'Calendar',
   navTasks: 'Tasks',
+  navUpcoming: 'Upcoming jobs',
   taskLabel: 'Task',
   repeat: 'Repeat',
   repeatNone: 'Does not repeat',

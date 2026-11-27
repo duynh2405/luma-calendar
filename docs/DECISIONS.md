@@ -65,3 +65,6 @@ Giờ làm việc mặc định 5h–23h (cài đặt cũ 8–18 chưa đổi s�
 ## ADR-016 · Nhập task bằng giọng nói (27/11/2026) — yêu cầu của chủ sản phẩm
 Web dùng SpeechRecognition của trình duyệt (vi-VN, miễn phí, không gửi qua máy chủ của mình). Công thức nói:
 "Việc [tên], hạn [ngày giờ], ưu tiên [cao/vừa/thấp], danh mục [tên lịch], nhắc trước [1 ngày]" — `core/nlp/voice.ts` đổi từ khóa thành cú pháp parser đã có (`!3`, `#media`), phần ngày giờ do parser đọc. Kết quả chỉ **điền sẵn** để người dùng xem chip rồi Enter lưu. Android/iOS: M4 (expo-speech-recognition).
+
+## ADR-017 · Thao tác kiểu "mỗi việc là một nút" (27/11/2026) — yêu cầu của chủ sản phẩm
+Bỏ panel chi tiết cố định bên phải: chi tiết sự kiện/công việc chỉ mở dạng hộp pop-up khi bấm. Bấm bất kỳ đâu trong ô ngày tạo việc mới; rê vào ngày hiện +, rê vào việc hiện X (xóa có xác nhận; riêng chuỗi lặp dùng hộp chọn phạm vi). Lớp ngoài của mỗi việc không dùng `<button>` để tránh lồng nút trong nút. Màn "Hôm nay" thay bằng "Công việc sắp tới" (3/5 việc gần nhất từ ngày đang xem).

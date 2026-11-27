@@ -18,6 +18,7 @@ import { BREAKPOINT, useTheme } from '@/ui/theme';
 
 import { deleteInstance, performUndo, safely } from '../calendar/actions';
 import { CalendarDialog } from '../calendar/CalendarDialog';
+import { ConfirmDeleteDialog } from '../calendar/ConfirmDeleteDialog';
 import { ConverterDialog } from '../calendar/ConverterDialog';
 import { EventEditor } from '../calendar/EventEditor';
 import { ScopeDialog } from '../calendar/ScopeDialog';
@@ -70,18 +71,22 @@ export function AppShell({ active, children, onCreate }: { active: Section; chil
           </View>
         ) : null}
         <View style={{ flex: 1, minWidth: 0 }}>{cursor ? children : null}</View>
-        {panel && isTablet ? (
+      </View>
+
+      {/* Details open as a pop-up box, only when asked for (a click on a job or the + of a day). */}
+      {panel && isTablet ? (
+        <View style={styles.popupWrap} pointerEvents="box-none">
+          <View style={[styles.backdrop, { backgroundColor: t.overlay }]} pointerEvents="none" />
           <View
             style={[
-              styles.panel,
-              { borderLeftColor: t.border, backgroundColor: t.bg, shadowColor: t.shadow },
-              !isDesktop && styles.panelOverlay,
+              styles.popup,
+              { backgroundColor: t.bg, borderColor: t.border, shadowColor: t.shadow, width: isDesktop ? 460 : 420 },
             ]}
           >
             {panel}
           </View>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
 
       {!isTablet ? (
         <>
@@ -111,6 +116,7 @@ export function AppShell({ active, children, onCreate }: { active: Section; chil
       <CalendarDialog />
       <ConverterDialog />
       <ScopeDialog />
+      <ConfirmDeleteDialog />
       <SearchDialog />
       <Toast />
     </View>
@@ -154,7 +160,7 @@ function useKeyboardShortcuts(active: Section) {
       const ui = useUi.getState();
       const target = e.target as HTMLElement | null;
       const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
-      const dialogOpen = ui.calendarDialog || ui.converterOpen || ui.scopePrompt || ui.searchOpen;
+      const dialogOpen = ui.calendarDialog || ui.converterOpen || ui.scopePrompt || ui.confirmDelete || ui.searchOpen;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) {
         e.preventDefault();
@@ -178,7 +184,7 @@ function useKeyboardShortcuts(active: Section) {
       const calendarKeys = active === 'calendar';
       switch (e.key) {
         case '1':
-          goTo('today');
+          goTo('upcoming');
           break;
         case '2':
           goTo('calendar');
@@ -240,7 +246,9 @@ function useKeyboardShortcuts(active: Section) {
 
 const styles = StyleSheet.create({
   sidebar: { borderRightWidth: 1 },
-  panel: { width: 400, borderLeftWidth: 1 },
+  popupWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 50 },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  popup: { maxWidth: '94%', height: '88%', maxHeight: 720, borderWidth: 1, borderRadius: 14, overflow: 'hidden', shadowOpacity: 1, shadowRadius: 40, shadowOffset: { width: 0, height: 16 } },
   panelOverlay: {
     position: 'absolute',
     right: 0,

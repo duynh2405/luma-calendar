@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { Check, X } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -12,7 +12,7 @@ import { defaultCalendarId, eventColor, taskColor, useData, visibleEvents, visib
 import { radius, useTheme, withAlpha } from '@/ui/theme';
 import { Txt } from '@/ui/primitives';
 
-import type { DisplayEvent } from './actions';
+import { type DisplayEvent, requestDelete } from './actions';
 import { useUi } from './ui-store';
 
 export const SNAP_MIN = 15;
@@ -102,7 +102,10 @@ export function webProps(p: { title?: string; onContextMenu?: (e: unknown) => vo
   return Platform.OS === 'web' ? p : {};
 }
 
-/** A compact event bar used in the all-day band, month grid and agenda. */
+/**
+ * A job (event or task) as a small button: tinted pill with a colour dot. Hover shows a ✕ that asks
+ * to delete it; clicking the pill opens its details.
+ */
 export function EventBar({
   event,
   compact,
@@ -126,29 +129,31 @@ export function EventBar({
 }) {
   const t = useTheme();
   const { calendars, tz, settings } = useCalendarData();
+  const [hover, setHover] = useState(false);
   const color = eventColor(event, calendars);
   const task = (event as DisplayEvent).task;
   const done = task ? task.status === 'done' : !!event.doneAt;
-  const solid = (event.allDay || !compact) && !task;
   const time = showTime && !event.allDay ? formatMinutes(instantToWall(event.start, tz).minutes, settings.timeFormat) : '';
+  const alpha = Math.min(0.5, t.tintAlpha + 0.04 + (hover || selected ? 0.1 : 0));
   return (
     <Pressable
       onPress={onPress}
       onPointerDown={onPointerDown as never}
-      accessibilityRole="button"
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
       accessibilityLabel={`${event.title} ${time}`}
       {...webProps({ title: `${time ? time + ' ' : ''}${event.title}` })}
       style={[
         styles.bar,
         {
-          backgroundColor: solid ? withAlpha(color, selected ? 0.42 : t.tintAlpha + 0.06) : 'transparent',
+          backgroundColor: withAlpha(color, alpha),
           opacity: ghost ? 0.55 : done && !task ? 0.6 : 1,
-          borderTopLeftRadius: continuesBefore ? 0 : radius.sm,
-          borderBottomLeftRadius: continuesBefore ? 0 : radius.sm,
-          borderTopRightRadius: continuesAfter ? 0 : radius.sm,
-          borderBottomRightRadius: continuesAfter ? 0 : radius.sm,
+          borderTopLeftRadius: continuesBefore ? 0 : radius.md,
+          borderBottomLeftRadius: continuesBefore ? 0 : radius.md,
+          borderTopRightRadius: continuesAfter ? 0 : radius.md,
+          borderBottomRightRadius: continuesAfter ? 0 : radius.md,
         },
-        selected && { outlineColor: color, outlineWidth: 1, outlineStyle: 'solid' } as object,
+        selected && ({ outlineColor: color, outlineWidth: 1, outlineStyle: 'solid' } as object),
       ]}
     >
       {task ? (
@@ -162,10 +167,9 @@ export function EventBar({
         >
           {done ? <Check size={9} color="#fff" strokeWidth={3} /> : null}
         </Pressable>
-      ) : !solid ? (
+      ) : (
         <View style={[styles.dot, { backgroundColor: color }]} />
-      ) : null}
-      {solid && !continuesBefore ? <View style={[styles.stripe, { backgroundColor: color }]} /> : null}
+      )}
       {time ? (
         <Txt size="xs" color="textMuted" tabular numberOfLines={1}>
           {time}
@@ -176,10 +180,22 @@ export function EventBar({
         weight="medium"
         numberOfLines={1}
         color={done ? 'textFaint' : 'text'}
-        style={[{ flexShrink: 1 }, done && { textDecorationLine: 'line-through' }]}
+        style={[{ flexShrink: 1, flexGrow: 1 }, done && { textDecorationLine: 'line-through' }]}
       >
         {event.title}
       </Txt>
+      {hover && !ghost ? (
+        <Pressable
+          onPress={() => requestDelete(event as DisplayEvent)}
+          onPointerDown={(e: { stopPropagation: () => void }) => e.stopPropagation()}
+          accessibilityRole="button"
+          accessibilityLabel="Delete"
+          hitSlop={4}
+          style={[styles.x, { backgroundColor: t.bg, borderColor: t.borderStrong }]}
+        >
+          <X size={11} color={t.textMuted} strokeWidth={2.5} />
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
@@ -194,7 +210,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     cursor: 'pointer',
   } as object,
-  stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
+  x: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginLeft: 2 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   check: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });
