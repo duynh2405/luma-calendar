@@ -68,7 +68,8 @@ export function expandEvents(events: CalendarEvent[], from: DayKey, to: DayKey, 
       const occ = occurrenceOn(e, day);
       const r = eventDayRange(occ, tz);
       if (r.last < from || r.first > to) continue;
-      out.push({ ...occ, instanceKey: `${e.id}@${day}`, masterId: e.id, occurrenceDay: day });
+      // "Done" belongs to one occurrence (its override), never to the whole series.
+      out.push({ ...occ, doneAt: null, instanceKey: `${e.id}@${day}`, masterId: e.id, occurrenceDay: day });
     }
   }
   return out;

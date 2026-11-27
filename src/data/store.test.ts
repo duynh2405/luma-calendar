@@ -11,6 +11,7 @@ vi.mock('./storage', () => ({
 }));
 
 const { useData, visibleEvents } = await import('./store');
+const { expandEvents } = await import('@/core/recurrence/expand');
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -142,6 +143,32 @@ describe('store', () => {
     expect(override.recurrenceDay).toBe('2026-11-30');
     useData.getState().deleteEvent(override.id);
     expect(useData.getState().events[id].exdates).toEqual(['2026-11-29', '2026-11-30']);
+  });
+
+  it('marking an event done is stored, undoable, and one occurrence never marks the whole series', async () => {
+    const calId = Object.keys(useData.getState().calendars)[0];
+    const single = useData.getState().createEvent(timed(calId));
+    useData.getState().updateEvent(single, { doneAt: '2026-11-28T03:00:00.000Z' }, 'event-done');
+    expect(useData.getState().events[single].doneAt).toBe('2026-11-28T03:00:00.000Z');
+    useData.getState().undo();
+    expect(useData.getState().events[single].doneAt ?? null).toBeNull();
+
+    const series = useData.getState().createEvent({ ...timed(calId), recurrence: { freq: 'daily', interval: 1 } });
+    const { id: _i, createdAt: _c, updatedAt: _u, deletedAt: _d, recurrence: _r, exdates: _x, ...content } = useData.getState().events[series];
+    useData.getState().updateOccurrence({ masterId: series, occurrenceDay: '2026-11-30' }, 'this', {
+      ...content,
+      start: '2026-11-30T01:00:00.000Z',
+      end: '2026-11-30T02:00:00.000Z',
+      doneAt: '2026-11-30T03:00:00.000Z',
+    } as typeof content, 'event-done');
+    const events = Object.values(useData.getState().events).filter((e) => !e.deletedAt);
+    const inst = expandEvents(events, '2026-11-29', '2026-12-01', 'Asia/Ho_Chi_Minh').filter((i) => i.masterId === series);
+    expect(inst.map((i) => [i.occurrenceDay, !!i.doneAt]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))).toEqual([
+      ['2026-11-29', false],
+      ['2026-11-30', true],
+      ['2026-12-01', false],
+    ]);
+    await flush();
   });
 
   it('scheduleTask creates a linked time block and keeps the due date', () => {

@@ -33,6 +33,7 @@ Mọi record: `id` (UUIDv7, tạo ở client), `createdAt`, `updatedAt`, `delete
 | recurrenceMasterId, recurrenceDay | bản ghi ngoại lệ thay cho lần lặp ngày `recurrenceDay` |
 | taskId | khối thời gian của công việc |
 | reminders | phút trước giờ bắt đầu (gửi từ M4) |
+| doneAt | thời điểm đánh dấu "Xong việc" (null = chưa xong); lần lặp có doneAt riêng trong bản ghi override |
 
 ## Task
 | Trường | Ghi chú |

@@ -45,6 +45,8 @@ interface EventBase extends BaseRecord {
   taskId?: ID | null;
   /** Reminder offsets in minutes before start (delivered from M4). */
   reminders?: number[];
+  /** When the owner marked this event "done" (struck through in the views); null/absent = not done. */
+  doneAt?: string | null;
 }
 
 /** Timed event: start/end are UTC instants (ISO); timeZone is the zone it was created in. */

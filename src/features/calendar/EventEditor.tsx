@@ -1,5 +1,5 @@
 /** Create / edit an event. Rendered in the side panel (desktop) or a full-screen sheet (mobile). */
-import { CheckSquare, Copy, MapPin, Repeat, Trash2, TriangleAlert, X } from 'lucide-react-native';
+import { Check, CheckSquare, Copy, MapPin, Repeat, Trash2, TriangleAlert, X } from 'lucide-react-native';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
@@ -18,7 +18,7 @@ import { CalendarIcon } from '@/ui/icons';
 import { Button, Field, IconButton, Toggle, Txt } from '@/ui/primitives';
 import { radius, space, useTheme, withAlpha } from '@/ui/theme';
 
-import { contentOf, deleteInstance, isGeneratedOccurrence, safely } from './actions';
+import { contentOf, deleteInstance, isGeneratedOccurrence, safely, toggleInstanceDone } from './actions';
 import { describeRecurrence, RecurrencePicker } from './RecurrencePicker';
 import { eventTimeLabel, useCalendarData } from './shared';
 import { type EditorState, useUi } from './ui-store';
@@ -112,7 +112,7 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
       useUi.getState().setScopePrompt({
         kind: 'edit',
         instance: occurrence,
-        content: contentOf({ ...existing, ...f } as CalendarEvent),
+        content: contentOf({ ...existing, ...f, doneAt: occurrence.doneAt ?? null } as CalendarEvent),
         label: 'event-updated',
         onDone: close,
       });
@@ -139,6 +139,7 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
     if (id) useUi.getState().openEditor({ mode: 'edit', id });
   }
 
+  const isDone = !!(occurrence ? occurrence.doneAt : existing?.doneAt);
   const info = dayInfo(draft.startDay);
   const errorText = (e: ValidationError) => T(`err.${e}` as StringKey);
   const titleError = errors.find((e) => e.startsWith('title'));
@@ -150,6 +151,18 @@ function EventEditorForm({ editor }: { editor: NonNullable<EditorState> }) {
         <Txt size="lg" weight="semibold" style={{ flex: 1 }}>
           {editor.mode === 'create' ? T('newEvent') : T('editEvent')}
         </Txt>
+        {existing ? (
+          <Button
+            size="sm"
+            icon={Check}
+            variant={isDone ? 'secondary' : 'primary'}
+            label={isDone ? T('markUndone') : T('markDone')}
+            onPress={() => {
+              toggleInstanceDone(occurrence ?? asInstance(existing));
+              close();
+            }}
+          />
+        ) : null}
         {existing ? <IconButton icon={Copy} title={T('duplicate')} onPress={duplicate} /> : null}
         {existing ? <IconButton icon={Trash2} title={T('delete')} onPress={remove} /> : null}
         <IconButton icon={X} title={T('close')} onPress={close} />

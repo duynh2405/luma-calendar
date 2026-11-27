@@ -1,5 +1,11 @@
 # Changelog
 
+## [Chưa phát hành] – phản hồi sau M2
+
+### Thêm
+- Nút **Xong việc** cho sự kiện (trong form sửa và dấu tick ở màn Hôm nay): sự kiện bị gạch ngang và mờ trên mọi chế độ xem; bấm lại để bỏ đánh dấu. Với sự kiện lặp, chỉ đánh dấu đúng lần đó.
+- Ngày đang chọn được tô sáng (viền + nền) ở lưới Tháng, cột Tuần/3 ngày và lịch nhỏ; bấm ô ngày trống cũng chọn ngày đó.
+
 ## [0.2.0] – 2026-11-27 — M2 Lặp lại + Công việc + Hôm nay
 
 ### Thêm

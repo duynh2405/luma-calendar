@@ -46,6 +46,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
   const events = useDisplayEvents(days[0], days[days.length - 1]);
   const editor = useUi((s) => s.editor);
   const taskPanel = useUi((s) => s.taskPanel);
+  const cursor = useUi((s) => s.cursor);
   const [preview, setPreview] = useState<Preview | null>(null);
   // Re-render every 30 s so the "now" line moves.
   const [tick, setTick] = useState(0);
@@ -212,7 +213,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
           return (
             <Pressable
               key={d}
-              style={styles.headerCell}
+              style={[styles.headerCell, days.length > 1 && d === cursor && { backgroundColor: t.accentSoft }]}
               onPress={() => {
                 useUi.getState().setCursor(d);
                 useUi.getState().setView('day');
@@ -223,7 +224,13 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
               <Txt size="xs" weight="medium" color={isToday ? 'accent' : 'textMuted'}>
                 {weekdayShort(locale, d)}
               </Txt>
-              <View style={[styles.dateCircle, isToday && { backgroundColor: t.accent }]}>
+              <View
+                style={[
+                  styles.dateCircle,
+                  isToday && { backgroundColor: t.accent },
+                  days.length > 1 && d === cursor && { borderWidth: 2, borderColor: t.accent },
+                ]}
+              >
                 <Txt size="lg" weight="semibold" color={isToday ? 'accentText' : 'text'} tabular>
                   {Number(d.slice(8))}
                 </Txt>
@@ -315,6 +322,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                   styles.dayCol,
                   { borderLeftColor: t.border },
                   isWeekend(d) && { backgroundColor: t.weekendTint },
+                  days.length > 1 && d === cursor && { backgroundColor: t.accentSoft },
                 ]}
                 onPointerDown={isWeb ? ((e: RNPointerEvent) => beginCreate(e, gridPointFromEvent(e, col))) : undefined}
               >
@@ -370,7 +378,7 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                           {
                             backgroundColor: withAlpha(color, selected ? 0.4 : t.tintAlpha),
                             borderLeftColor: color,
-                            opacity: ghost ? 0.85 : 1,
+                            opacity: ghost ? 0.85 : s.event.doneAt ? 0.55 : 1,
                             borderTopLeftRadius: s.continuesBefore ? 0 : radius.sm,
                             borderTopRightRadius: s.continuesBefore ? 0 : radius.sm,
                             borderBottomLeftRadius: s.continuesAfter ? 0 : radius.sm,
@@ -380,7 +388,12 @@ export function TimeGridView({ days }: { days: DayKey[] }) {
                           isWeb && ({ cursor: ghost ? 'grabbing' : 'pointer' } as object),
                         ]}
                       >
-                        <Txt size="xs" weight="semibold" numberOfLines={height < 36 ? 1 : 2}>
+                        <Txt
+                          size="xs"
+                          weight="semibold"
+                          numberOfLines={height < 36 ? 1 : 2}
+                          style={s.event.doneAt ? { textDecorationLine: 'line-through' } : undefined}
+                        >
                           {s.event.title}
                           {height < 36 ? (
                             <Txt size="xs" color="textMuted">

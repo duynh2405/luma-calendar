@@ -128,7 +128,7 @@ export function EventBar({
   const { calendars, tz, settings } = useCalendarData();
   const color = eventColor(event, calendars);
   const task = (event as DisplayEvent).task;
-  const done = task?.status === 'done';
+  const done = task ? task.status === 'done' : !!event.doneAt;
   const solid = (event.allDay || !compact) && !task;
   const time = showTime && !event.allDay ? formatMinutes(instantToWall(event.start, tz).minutes, settings.timeFormat) : '';
   return (
@@ -142,11 +142,11 @@ export function EventBar({
         styles.bar,
         {
           backgroundColor: solid ? withAlpha(color, selected ? 0.42 : t.tintAlpha + 0.06) : 'transparent',
+          opacity: ghost ? 0.55 : done && !task ? 0.6 : 1,
           borderTopLeftRadius: continuesBefore ? 0 : radius.sm,
           borderBottomLeftRadius: continuesBefore ? 0 : radius.sm,
           borderTopRightRadius: continuesAfter ? 0 : radius.sm,
           borderBottomRightRadius: continuesAfter ? 0 : radius.sm,
-          opacity: ghost ? 0.55 : 1,
         },
         selected && { outlineColor: color, outlineWidth: 1, outlineStyle: 'solid' } as object,
       ]}

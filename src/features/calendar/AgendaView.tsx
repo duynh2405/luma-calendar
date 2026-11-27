@@ -85,7 +85,8 @@ export function AgendaView({ cursor }: { cursor: DayKey }) {
                     <Txt
                       weight="medium"
                       numberOfLines={1}
-                      style={e.task?.status === 'done' ? { textDecorationLine: 'line-through' } : undefined}
+                      color={(e.task ? e.task.status === 'done' : e.doneAt) ? 'textFaint' : 'text'}
+                      style={(e.task ? e.task.status === 'done' : e.doneAt) ? { textDecorationLine: 'line-through' } : undefined}
                     >
                       {e.title}
                     </Txt>

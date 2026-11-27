@@ -98,6 +98,26 @@ export function changeInstanceTime(i: DisplayEvent, patch: Pick<CalendarEvent, '
   safely(() => useData.getState().updateEvent(i.id, patch, undoKey), undoKey);
 }
 
+/**
+ * Mark an event (or one occurrence of a series) done / not done. Never asks for a scope:
+ * "done" always applies to this occurrence only. Tasks use their own status.
+ */
+export function toggleInstanceDone(i: DisplayEvent) {
+  if (i.task) {
+    const wasDone = i.task.status === 'done';
+    safely(() => useData.getState().toggleTaskDone(i.task!.id), wasDone ? 'task-reopened' : 'task-completed');
+    return;
+  }
+  const doneAt = i.doneAt ? null : new Date().toISOString();
+  const key = doneAt ? 'event-done' : 'event-undone';
+  if (isGeneratedOccurrence(i)) {
+    const content = { ...contentOf(i), doneAt } as EventContent;
+    safely(() => useData.getState().updateOccurrence({ masterId: i.masterId, occurrenceDay: i.occurrenceDay }, 'this', content, key), key);
+    return;
+  }
+  safely(() => useData.getState().updateEvent(i.id, { doneAt }, key), key);
+}
+
 /** Delete an instance (asks the scope for occurrences of a series). */
 export function deleteInstance(i: DisplayEvent, onDone?: () => void) {
   if (i.task) {

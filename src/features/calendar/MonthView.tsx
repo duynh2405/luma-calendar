@@ -91,7 +91,10 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
 
   const beginCellPress = usePointerDrag<{ day: DayKey }>({
     onEnd(_pt, _s, d, moved) {
-      if (!moved) openCreate(newDraft(d.day, 9 * 60, 10 * 60, true));
+      if (!moved) {
+        useUi.getState().setCursor(d.day);
+        openCreate(newDraft(d.day, 9 * 60, 10 * 60, true));
+      }
     },
   });
 
@@ -135,6 +138,7 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                 const info = dayInfo(d);
                 const inMonth = parseDayKey(d).m === curMonth;
                 const isToday = d === today;
+                const isSelected = d === cursor;
                 const holiday = settings.showHolidays ? info.holidays[0] : undefined;
                 return (
                   <Pressable
@@ -143,9 +147,17 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                       styles.cell,
                       { borderLeftColor: t.border },
                       !inMonth && { backgroundColor: t.weekendTint },
+                      isSelected && { backgroundColor: t.accentSoft, borderTopColor: t.accent, borderTopWidth: 2 },
                     ]}
                     onPointerDown={isWeb ? ((e: RNPointerEvent) => beginCellPress(e, { day: d })) : undefined}
-                    onPress={isWeb ? undefined : () => openCreate(newDraft(d, 9 * 60, 10 * 60, true))}
+                    onPress={
+                      isWeb
+                        ? undefined
+                        : () => {
+                            useUi.getState().setCursor(d);
+                            openCreate(newDraft(d, 9 * 60, 10 * 60, true));
+                          }
+                    }
                     accessibilityLabel={d}
                   >
                     <View style={styles.cellHeader}>
@@ -155,7 +167,11 @@ export function MonthView({ cursor }: { cursor: DayKey }) {
                           useUi.getState().setView('day');
                         }}
                         onPointerDown={(e: { stopPropagation: () => void }) => e.stopPropagation()}
-                        style={[styles.dateBadge, isToday && { backgroundColor: t.accent }]}
+                        style={[
+                          styles.dateBadge,
+                          isToday && { backgroundColor: t.accent },
+                          isSelected && { borderWidth: 2, borderColor: t.accent },
+                        ]}
                         accessibilityRole="button"
                         accessibilityLabel={`${T('viewDay')} ${d}`}
                       >

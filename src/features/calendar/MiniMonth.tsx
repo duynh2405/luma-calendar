@@ -63,6 +63,7 @@ export function MiniMonth({ selected, onSelect }: { selected: DayKey; onSelect: 
                   hovered && { backgroundColor: t.surfaceAlt },
                   isSel && { backgroundColor: t.accentSoft },
                   isToday && { backgroundColor: t.accent },
+                  isSel && { borderWidth: 2, borderColor: t.accent },
                 ]}
               >
                 <Txt

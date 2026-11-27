@@ -1,5 +1,5 @@
 /** Today: the screen opened every morning. No charts — just what matters today. */
-import { ChevronRight, Clock, MapPin, Search } from 'lucide-react-native';
+import { Check, ChevronRight, Clock, MapPin, Search } from 'lucide-react-native';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -13,7 +13,7 @@ import { canChiLine, formatLongDate, lunarFullLabel, useLocale, useT, weekdaySho
 import { HoverPressable, IconButton, Txt } from '@/ui/primitives';
 import { radius, space, useTheme } from '@/ui/theme';
 
-import { type DisplayEvent, openInstance } from '../calendar/actions';
+import { type DisplayEvent, openInstance, toggleInstanceDone } from '../calendar/actions';
 import { eventTimeLabel, keyOf, useCalendarData, useDisplayEvents } from '../calendar/shared';
 import { useUi } from '../calendar/ui-store';
 import { QuickAdd } from '../quickadd/QuickAdd';
@@ -142,15 +142,27 @@ function TodayContent() {
           </Txt>
         ) : (
           todays.map((e) => {
-            const past = !e.allDay && endMinOn(e, today, tz) <= now.minutes;
+            const isDone = e.task ? e.task.status === 'done' : !!e.doneAt;
+            const past = isDone || (!e.allDay && endMinOn(e, today, tz) <= now.minutes);
+            const color = eventColor(e, calendars);
             return (
               <HoverPressable key={keyOf(e)} onPress={() => openInstance(e)} style={({ hovered }) => [styles.eventRow, hovered && { backgroundColor: t.surfaceHover }]}>
-                <View style={[styles.bar, { backgroundColor: eventColor(e, calendars) }]} />
+                <View style={[styles.bar, { backgroundColor: color }]} />
+                <Pressable
+                  onPress={() => toggleInstanceDone(e)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isDone }}
+                  accessibilityLabel={T('markDone')}
+                  hitSlop={8}
+                  style={[styles.doneCheck, { borderColor: color, backgroundColor: isDone ? color : 'transparent' }]}
+                >
+                  {isDone ? <Check size={12} color="#fff" strokeWidth={3} /> : null}
+                </Pressable>
                 <Txt size="sm" color={past ? 'textFaint' : 'textMuted'} tabular style={{ width: 96 }}>
                   {e.allDay ? T('allDay') : `${fmt(startMinOn(e, today, tz))} – ${fmt(endMinOn(e, today, tz))}`}
                 </Txt>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt weight="medium" color={past ? 'textFaint' : 'text'} numberOfLines={1}>
+                  <Txt weight="medium" color={past ? 'textFaint' : 'text'} numberOfLines={1} style={isDone ? { textDecorationLine: 'line-through' } : undefined}>
                     {e.title}
                   </Txt>
                   {e.location ? (
@@ -322,6 +334,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
   next: { borderLeftWidth: 3, paddingLeft: 10, gap: 4 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  doneCheck: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   eventRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingRight: 6, borderRadius: radius.md },
   bar: { width: 3, alignSelf: 'stretch', borderRadius: 2 },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
