@@ -1,40 +1,63 @@
 # Tình trạng dự án
 
-**Cập nhật:** 27/11/2026 · **Milestone:** M1 – Calendar Core · **Trạng thái:** chờ chủ sản phẩm kiểm thử
+**Cập nhật:** 27/11/2026 · **Milestone:** M2 – Lặp lại + Công việc + Hôm nay · **Trạng thái:** chờ chủ sản phẩm kiểm thử
+(M1 đã được chủ sản phẩm xác nhận.)
 
-## Đã xong (M1)
-- Engine âm lịch + Can Chi + ngày lễ + công cụ đổi ngày (118 test tự động đạt).
-- Xem Ngày / 3 ngày / Tuần / Tháng / Lịch trình; mini calendar; vạch giờ hiện tại; vùng ngoài giờ làm việc.
-- Sự kiện: tạo/sửa/xóa/nhân bản, cả ngày, nhiều ngày, qua đêm, màu riêng, cảnh báo trùng giờ.
-- Chuột: bấm/kéo tạo, kéo dời, kéo giãn thời lượng; kéo trong xem Tháng & dải Cả ngày.
-- Nhiều lịch (màu, icon, ẩn/hiện, chỉ hiện 1 lịch, thứ tự, mặc định, lưu trữ, xóa).
-- Thùng rác, Hoàn tác, Cài đặt, VI/EN, sáng/tối, xuất/nhập JSON, phím tắt, giao diện điện thoại.
+## Đã xong (M2)
+- **Sự kiện lặp lại:** hằng ngày / tuần (nhiều thứ) / T2–T6 / tháng (theo ngày hoặc "thứ X tuần n", "cuối tháng") / năm,
+  khoảng lặp tùy chỉnh, kết thúc theo ngày hoặc số lần. Hiển thị trong mọi chế độ xem.
+- **Lặp theo âm lịch:** hằng tháng âm (mặc định tính cả tháng nhuận) và hằng năm âm (mặc định bỏ tháng nhuận);
+  ngày 30 của tháng thiếu → ngày 29; chuỗi bắt đầu trong tháng nhuận lặp ở tháng thường.
+- **Sửa / kéo / xóa một lần lặp:** hỏi "Chỉ sự kiện này / Sự kiện này và các sự kiện sau / Tất cả".
+- **Công việc:** Inbox, Hôm nay (gồm quá hạn), Sắp tới, Tất cả, Đã hoàn thành, theo danh mục; ưu tiên, trạng thái,
+  ngày bắt đầu, hạn chót (+ giờ), dự kiến, tiến độ tự tính (ghi đè được), danh sách kiểm, việc con, lặp lại
+  (hoàn thành → chuyển sang hạn kế tiếp, lưu lịch sử), **lên lịch làm** (khối thời gian trên lịch, giữ nguyên hạn chót).
+- Task có hạn hiện trên lịch (dải cả ngày / ô tháng / lịch trình), tick hoàn thành ngay trên lịch, kéo để dời hạn.
+- **Màn Hôm nay:** ngày dương + âm + Can Chi + ngày lễ, ô tạo nhanh, sự kiện tiếp theo (đếm ngược),
+  lịch hôm nay, khoảng trống trong giờ làm, việc hôm nay + tiến độ, ưu tiên cao, 7 ngày tới, chưa lên lịch.
+- **Tạo nhanh tiếng Việt:** hiểu ngày (mai, mốt, thứ Hai tuần sau, 5/12, ngày 15, cuối tuần), giờ & khoảng giờ có buổi
+  (7h sáng, 2 chiều, 8–12h), ngày âm, lặp (hằng ngày/tuần/tháng/năm, mỗi thứ 2), nhắc (trước 1 ngày, 2 tiếng),
+  `#danh-mục`, `!1–!3`, "tại …". Hiện các phần đã hiểu dạng chip; chỗ đoán phải nhấn Enter lần 2.
+- **Tìm kiếm** (Ctrl+K hoặc `/`) có dấu / không dấu trên sự kiện và công việc.
+- Điều hướng mới: sidebar (Hôm nay · Lịch · Công việc), thanh tab dưới trên điện thoại; phím 1/2/3.
+- Thùng rác có công việc; sao lưu JSON schema 2 (vẫn nhập được file schema 1).
 
-## Đã tự kiểm thử trên trình duyệt (Chrome, 1440×900 và 375×812)
-Tạo bằng kéo · gõ tiêu đề + Enter lưu · kéo dời sang ngày khác + giờ khác · Ctrl+Z · kéo giãn · sửa giờ bằng "14h30" ·
-thêm địa điểm · tạo sự kiện cả ngày 16/11→3/12 (thanh trải 3 tuần) · xem Tháng/Lịch trình · đổi âm→dương (Tết 2027 = 06/02/2027) ·
-giao diện sáng · xóa bằng phím Delete → thùng rác → khôi phục · nạp lại trang dữ liệu còn nguyên · bố cục điện thoại + nút tạo.
-Không có lỗi console. Build web production thành công.
+## Đã tự kiểm thử
+- **Tự động:** 186 test (lịch âm, lặp lại, sửa theo phạm vi, parser tạo nhanh với các câu ví dụ của chủ sản phẩm,
+  task, store), typecheck, lint (0 cảnh báo), build web production.
+- **Trình duyệt (Chrome 1440×900 và 375×812):** tạo bằng 5 câu tiếng Việt khác nhau (gồm câu mơ hồ cần xác nhận) ·
+  sự kiện lặp hằng tuần hiện đúng các tuần · kéo một lần lặp → "Chỉ sự kiện này" (tuần sau không đổi) ·
+  kéo → "Sự kiện này và các sự kiện sau" (các tuần sau đổi, lần đã sửa riêng giữ nguyên) · form của một lần lặp
+  hiện "Thuộc chuỗi lặp" + "Sửa cả chuỗi" · tạo task, danh sách kiểm, việc con, tiến độ tự tính (33%) ·
+  lên lịch làm · tìm "thiet bi" không dấu · màn Hôm nay trên desktop và điện thoại.
+
+## Lỗi phát hiện & đã sửa trong lúc làm
+- Parser hiểu "chị **Mai**" là "ngày mai" → thêm quy tắc tên người.
+- Màn cũ vẫn mount khi chuyển màn → hai hộp thoại, phím tắt chạy hai lần (Ctrl+Z có thể hoàn tác 2 bước).
+  Đã chuyển sang thay thế màn (replace) + chỉ màn đang hiện nghe phím.
+- Gọi `Date.now()` trong lúc render (React Compiler) → đưa thời gian vào state.
+- Selector trả mảng mới mỗi lần render (nguy cơ render vô hạn) → dùng useMemo.
 
 ## Chưa làm / giới hạn đã biết
-- Chưa có: sự kiện lặp lại, task, nhắc nhở, đồng bộ (theo roadmap M2–M4).
-- Kéo thả bằng cảm ứng chưa có (chạm để tạo/mở được). Vuốt đổi ngày trên điện thoại chưa có.
-- Chuột phải chỉ có trên danh sách lịch (mở sửa lịch); menu chuột phải cho sự kiện chưa có.
-- Tooltip (thuộc tính `title`) không hiện trên web do React Native Web không chuyển tiếp thuộc tính này.
-- Bản Android/iOS chưa build; adapter lưu trữ native chưa chạy trên máy thật.
-- Dữ liệu chỉ ở trình duyệt đang dùng → nhớ xuất JSON để sao lưu.
-- "Xóa vĩnh viễn" vẫn hoàn tác được trong phiên hiện tại (chỉ mất hẳn sau khi tải lại trang).
+- Nhắc nhở mới **được lưu** (từ tạo nhanh) nhưng **chưa gửi thông báo** — làm ở M4.
+- Chưa có giao diện thêm nhắc nhở trong form sự kiện/công việc (sẽ làm cùng M4).
+- Sửa quy tắc lặp của một lần lặp phải qua "Sửa cả chuỗi" (áp cho cả chuỗi).
+- Liên kết sự kiện ↔ việc chuẩn bị/hậu kỳ: dữ liệu đã có, giao diện tạo liên kết chưa có (dự kiến M6 cùng template).
+- Kéo task từ danh sách thả vào lịch chưa có (dùng nút "Lên lịch làm").
+- Lịch ngày lễ chưa bật/tắt từng ngày (chỉ bật/tắt chung).
+- Kéo thả cảm ứng, vuốt đổi ngày trên điện thoại: M6. Tooltip trên web chưa hiện.
+- Dữ liệu vẫn chỉ ở trình duyệt (đồng bộ ở M3) → nhớ xuất JSON.
 
-## Rủi ro còn tồn tại
-- Trình duyệt có thể xóa IndexedDB khi thiếu dung lượng (đã xin `persistent storage`, không đảm bảo 100%).
-- Hiệu năng xem Tháng với rất nhiều sự kiện chưa đo (dữ liệu thật hiện còn ít).
+## Rủi ro
+- Chuỗi lặp rất dài + nhiều ngoại lệ chưa đo hiệu năng trên máy yếu.
+- Parser chỉ hiểu các mẫu câu đã viết luật; câu lạ sẽ thành tiêu đề nguyên văn (an toàn nhưng cần sửa tay).
 
 ## Thao tác chủ sản phẩm cần kiểm tra
-1. Tạo vài lịch thật (Loa đài, Media, …): màu, icon, thứ tự, đặt mặc định, ẩn/hiện, giữ chuột để chỉ hiện 1 lịch.
-2. Tạo sự kiện bằng: nút Tạo, phím C, bấm vào ô giờ, kéo một khoảng giờ, bấm ô trong xem Tháng.
-3. Kéo dời sự kiện sang ngày/giờ khác; kéo mép dưới để đổi thời lượng; Ctrl+Z.
-4. Sự kiện cả ngày nhiều ngày; sự kiện qua đêm (22:00 → 02:00 hôm sau).
-5. Đối chiếu ngày âm với lịch giấy / lịch bạn tin cậy ở vài tháng (đặc biệt mùng 1, rằm, tháng nhuận 2028).
-6. Cài đặt: tuần bắt đầu, 12h/24h, ẩn cuối tuần, giờ làm việc, tắt âm lịch, tiếng Anh, sáng/tối.
-7. Xóa → Thùng rác → Khôi phục; xuất JSON rồi nhập lại (không được trùng).
-8. Mở trên điện thoại (cùng mạng Wi-Fi) và xem bố cục.
+1. Màn **Hôm nay**: có đúng thứ bạn cần xem mỗi sáng không? Thiếu/thừa khối nào?
+2. Gõ tạo nhanh 10–20 câu theo cách bạn hay nói (ghi lại câu nào hiểu sai để mình bổ sung luật).
+3. Tạo sự kiện lặp: họp hằng tuần, giỗ theo âm lịch (ví dụ "giỗ ông 10/3 âm hằng năm"), mùng 1 & rằm hằng tháng.
+4. Kéo / sửa / xóa một lần lặp với cả ba lựa chọn phạm vi.
+5. Màn **Công việc**: Inbox → phân loại, đặt hạn, việc con, danh sách kiểm, việc lặp (hoàn thành xem hạn tự nhảy).
+6. "Lên lịch làm" cho một việc rồi xem trên lịch; tick việc ngay trên lịch.
+7. Tìm kiếm (Ctrl+K) gõ không dấu.
+8. Trên điện thoại: tab dưới, nút +, mở/sửa sự kiện và công việc.

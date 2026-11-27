@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0] – 2026-11-27 — M2 Lặp lại + Công việc + Hôm nay
+
+### Thêm
+- Sự kiện lặp lại (RFC 5545: ngày/tuần/tháng/năm, khoảng, kết thúc theo ngày/số lần) và lặp theo âm lịch (tháng/năm, quy tắc tháng nhuận & ngày 30).
+- Sửa/kéo/xóa một lần lặp với phạm vi: chỉ lần này / lần này và các lần sau / tất cả.
+- Công việc: Inbox, Hôm nay, Sắp tới, Tất cả, Đã hoàn thành, theo danh mục; ưu tiên, trạng thái, ngày bắt đầu/hạn chót/giờ hạn, dự kiến, tiến độ, danh sách kiểm, việc con, lặp lại, lịch sử hoàn thành, lên lịch làm (khối thời gian).
+- Task có hạn hiện và kéo được trên lịch; tick hoàn thành trên lịch.
+- Màn Hôm nay (sự kiện tiếp theo, lịch hôm nay, khoảng trống, việc hôm nay, ưu tiên cao, 7 ngày tới).
+- Tạo nhanh bằng câu tiếng Việt (không dùng AI), xem trước dạng chip, xác nhận chỗ đoán.
+- Tìm kiếm có dấu/không dấu (Ctrl+K, /).
+- Sidebar điều hướng, thanh tab dưới cho điện thoại, phím 1/2/3.
+- Sao lưu JSON schema 2 (kèm công việc), thùng rác có công việc.
+
+### Sửa
+- Phím tắt và hộp thoại có thể chạy hai lần khi chuyển màn.
+
 ## [0.1.0] – 2026-11-27 — M1 Calendar Core (web)
 
 ### Thêm

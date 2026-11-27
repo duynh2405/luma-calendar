@@ -33,3 +33,18 @@ Bỏ file LICENSE của template Expo. Không có license = mọi quyền đư�
 **Cần chủ sản phẩm chốt** nếu muốn mở nguồn (MIT…) hoặc giữ nguyên.
 
 ## ADR-009 · Không tích hợp Google Calendar (chủ sản phẩm quyết định 27/11/2026)
+
+## ADR-010 · Mô hình lặp lại: master + exdates + override
+Chỉ lưu bản gốc (quy tắc) + danh sách ngày bỏ (`exdates`) + bản ghi ngoại lệ (`recurrenceMasterId`, `recurrenceDay`).
+Không lưu sẵn từng lần lặp. "Các sự kiện sau" = tách chuỗi (UNTIL/COUNT cho chuỗi cũ, chuỗi mới từ lần đó).
+Quy tắc âm lịch là phần mở rộng riêng (`lunarMonthly`, `lunarYearly`) vì RRULE không biểu diễn được.
+
+## ADR-011 · Tạo nhanh dựa trên luật, không AI
+Parser chạy trên bản bỏ dấu ánh xạ 1:1 ký tự, nên tô/loại được đúng đoạn trong câu gốc. Chỗ đoán (3h → 15h, thứ trùng hôm nay,
+ngày đã qua → năm sau) được báo để người dùng xác nhận. Có giờ → sự kiện; có lặp/ngày âm → sự kiện cả ngày; còn lại → công việc.
+
+## ADR-012 · Các màn chính thay thế nhau (router.replace)
+Tránh hai màn cùng mount (phím tắt và hộp thoại chạy hai lần). Cài đặt / Thùng rác vẫn mở chồng (push) để Back quay lại.
+
+## ADR-013 · Công việc chỉnh sửa là lưu ngay
+Mỗi thay đổi trong panel công việc được lưu tức thì (có Undo), giống Todoist/TickTick; sự kiện vẫn dùng nút Lưu.

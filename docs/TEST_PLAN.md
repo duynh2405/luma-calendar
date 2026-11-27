@@ -7,7 +7,9 @@
 | `core/time/*.test.ts` | Cộng ngày qua năm nhuận, đầu tuần, lưới tháng, múi giờ VN, DST (Berlin), định dạng 12/24h, phân tích giờ/ngày gõ tay |
 | `core/layout/layout.test.ts` | Phân loại cả ngày/≥24h, tách sự kiện qua đêm, xếp cột sự kiện chồng giờ, xếp làn thanh nhiều ngày, ẩn cuối tuần, phát hiện trùng |
 | `core/model/*.test.ts` | UUIDv7, validate, chuyển đổi form↔sự kiện, dời sự kiện, sao lưu không tạo trùng, chỉ ghi đè khi mới hơn |
-| `data/store.test.ts` | Lần đầu tạo đúng 1 lịch, lưu & nạp lại, xóa→thùng rác→hoàn tác, hoàn tác tạo xóa khỏi đĩa, xóa lịch kéo theo sự kiện & chuyển mặc định, xóa vĩnh viễn chỉ áp dụng mục trong thùng rác |
+| `core/recurrence/*.test.ts` | Ngày/tuần/tháng/năm, ngày 31, thứ n & cuối tháng, 29/2, COUNT/UNTIL, lặp âm lịch (tháng nhuận, ngày 30), bung lặp với exdate & ngoại lệ, sửa/xóa theo 3 phạm vi |
+| `core/nlp/quickadd.test.ts` | 5 câu ví dụ của chủ sản phẩm, ngày tương đối, giờ & khoảng giờ có buổi, ngày âm, lặp, nhắc, #danh mục, !ưu tiên, tên người "Mai", "tài liệu" không phải địa điểm |
+| `data/store.test.ts` | Lần đầu tạo đúng 1 lịch, lưu & nạp lại, xóa→thùng rác→hoàn tác, hoàn tác tạo xóa khỏi đĩa, xóa lịch kéo theo sự kiện & chuyển mặc định, xóa vĩnh viễn chỉ áp dụng mục trong thùng rác, công việc (hoàn thành, lặp, xóa kèm việc con), sự kiện lặp theo phạm vi, lên lịch làm |
 
 Kiểm tra tĩnh: `npm run typecheck`, `npm run lint` (gồm luật React Compiler).
 

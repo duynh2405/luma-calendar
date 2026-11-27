@@ -2,7 +2,7 @@
 
 Ứng dụng lịch và quản lý công việc cá nhân, đa nền tảng (web, Android, iOS), có **lịch âm Việt Nam chính xác** (UTC+7).
 
-> Trạng thái: **M1 – Calendar Core** (bản web, lưu dữ liệu trên trình duyệt). Xem [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
+> Trạng thái: **M2 – Lặp lại + Công việc + Hôm nay** (bản web, lưu dữ liệu trên trình duyệt). Xem [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
 
 ## Chạy thử (web)
 
